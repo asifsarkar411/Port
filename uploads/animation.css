@@ -1,0 +1,267 @@
+/* ==========================================================================
+   ANIMATIONS LAYER
+   Add this file AFTER your main stylesheet:
+   <link rel="stylesheet" href="style-responsive.css">
+   <link rel="stylesheet" href="animations.css">
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. Respect reduced-motion users first — skip everything below for them
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .reveal, .reveal-left, .reveal-right, .reveal-scale {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   1. SCROLL-REVEAL BASE STATES
+   JS adds .reveal (etc.) on load, then .in-view once the element crosses
+   the viewport threshold. Everything animates from these hidden states.
+   -------------------------------------------------------------------------- */
+.reveal {
+    opacity: 0;
+    transform: translateY(45px);
+    transition: opacity 0.7s cubic-bezier(0.25, 0.8, 0.25, 1),
+                transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition-delay: var(--reveal-delay, 0s);
+}
+
+.reveal-left {
+    opacity: 0;
+    transform: translateX(-60px);
+    transition: opacity 0.7s cubic-bezier(0.25, 0.8, 0.25, 1),
+                transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition-delay: var(--reveal-delay, 0s);
+}
+
+.reveal-right {
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.7s cubic-bezier(0.25, 0.8, 0.25, 1),
+                transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition-delay: var(--reveal-delay, 0s);
+}
+
+.reveal-scale {
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1),
+                transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition-delay: var(--reveal-delay, 0s);
+}
+
+.reveal.in-view,
+.reveal-left.in-view,
+.reveal-right.in-view,
+.reveal-scale.in-view {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+}
+
+/* --------------------------------------------------------------------------
+   2. SECTION TITLE — underline draws in once revealed
+   -------------------------------------------------------------------------- */
+.section-title::after {
+    width: 0;
+    transition: width 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s;
+}
+
+.section-title.in-view::after {
+    width: 80px;
+}
+
+/* --------------------------------------------------------------------------
+   3. NAVIGATION — condenses and gains depth on scroll
+   -------------------------------------------------------------------------- */
+.glass-nav {
+    transition: var(--transition-smooth), padding 0.35s ease, box-shadow 0.35s ease;
+}
+
+.glass-nav.nav-scrolled {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Active scrollspy link */
+.nav-links a.active-link {
+    color: var(--accent-color);
+    opacity: 1;
+}
+
+.nav-links a.active-link::after {
+    width: 100%;
+}
+
+/* Scroll progress bar — JS creates this element automatically, no markup needed */
+.scroll-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-danger));
+    z-index: 1100;
+    transition: width 0.1s linear;
+}
+
+/* --------------------------------------------------------------------------
+   4. CARD MICRO-INTERACTIONS — subtle lift + glow, layered on your existing
+   hover rules (this only adds the transition timing + click feedback)
+   -------------------------------------------------------------------------- */
+.glass-card,
+.btn,
+.btn-success,
+.btn-danger,
+.social-links-contact a,
+.social-hero a {
+    will-change: transform;
+}
+
+.glass-card:active {
+    transform: scale(0.985);
+}
+
+.btn:active,
+.btn-success:active,
+.btn-danger:active {
+    transform: scale(0.94);
+}
+
+/* --------------------------------------------------------------------------
+   5. RIPPLE EFFECT — JS injects a .ripple span on click; this animates it
+   -------------------------------------------------------------------------- */
+.btn, .btn-success, .btn-danger, .social-links-contact a, .social-hero a {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    transform: scale(0);
+    pointer-events: none;
+    animation: rippleExpand 0.6s ease-out forwards;
+}
+
+@keyframes rippleExpand {
+    to {
+        transform: scale(2.8);
+        opacity: 0;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   6. HERO ENTRANCE — plays once on page load, no scroll needed
+   -------------------------------------------------------------------------- */
+.hero-text > * {
+    opacity: 0;
+    animation: heroFadeUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+.hero-text h1     { animation-delay: 0.1s; }
+.hero-text h3     { animation-delay: 0.25s; }
+.hero-text p      { animation-delay: 0.4s; }
+.hero-text .hero-buttons   { animation-delay: 0.55s; }
+.hero-text .social-hero    { animation-delay: 0.7s; }
+
+.hero-image-container img {
+    opacity: 0;
+    animation: heroImagePop 0.9s cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s forwards;
+}
+
+@keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(25px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroImagePop {
+    from { opacity: 0; transform: scale(0.8) rotate(-4deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* --------------------------------------------------------------------------
+   7. STAT COUNTERS — number ticks up while the digits fade/scale slightly
+   -------------------------------------------------------------------------- */
+.bio-stats strong {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.bio-stats div.in-view strong {
+    animation: statPop 0.4s ease-out 0.2s backwards;
+}
+
+@keyframes statPop {
+    from { transform: scale(0.6); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+   8. TABLE ROWS — cascade in when the admin dashboard section appears
+   -------------------------------------------------------------------------- */
+.data-table tbody tr {
+    opacity: 0;
+    transform: translateX(-15px);
+    transition: opacity 0.5s ease, transform 0.5s ease, background 0.4s ease;
+    transition-delay: var(--reveal-delay, 0s);
+}
+
+.data-table tbody tr.in-view {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* --------------------------------------------------------------------------
+   9. BACK TO TOP BUTTON (optional — only appears if you add
+   <button id="backToTop">↑</button> anywhere in your HTML)
+   -------------------------------------------------------------------------- */
+#backToTop {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: var(--glass-border);
+    backdrop-filter: blur(var(--blur-strength));
+    -webkit-backdrop-filter: blur(var(--blur-strength));
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(15px);
+    transition: var(--transition-smooth);
+    z-index: 999;
+}
+
+#backToTop.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+#backToTop:hover {
+    background: var(--accent-color);
+    color: #000;
+    transform: translateY(-4px);
+}
+
+@media (max-width: 600px) {
+    #backToTop {
+        bottom: 18px;
+        right: 18px;
+        width: 42px;
+        height: 42px;
+    }
+}

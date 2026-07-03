@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Control Matrix Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="animation.css">
+    <link rel="stylesheet" href="animation.css">
+    <style>
+        :root {
+            --bg-main: #14213d;
+            --bg-sidebar: #1a2c4e;
+            --bg-card: #1f355e;
+            --text-main: #ffffff;
+            --text-muted: #8fa0c2;
+            --accent-aqua: #00e5ff;
+            --accent-pink: #ff357a;
+            --accent-orange: #fca311;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+        .hidden { display: none !important; }
+
+        /* AUTHENTICATION LAYOUT */
+        .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .auth-card { background: var(--bg-sidebar); border-radius: 12px; width: 100%; max-width: 400px; padding: 35px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        .auth-card h2 { text-align: center; font-weight: 600; margin-bottom: 25px; }
+
+        /* MAIN DASHBOARD STRUCTURE GRID */
+        .dashboard-wrapper { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+        /* SIDEBAR COMPONENT */
+        .sidebar { background-color: var(--bg-sidebar); border-right: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; padding: 25px 0; }
+        
+        .profile-section { display: flex; flex-direction: column; align-items: center; padding: 0 20px 25px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: center; }
+        .avatar-container { width: 100px; height: 100px; border-radius: 50%; position: relative; overflow: hidden; margin-bottom: 15px; border: 3px solid var(--accent-aqua); background: #000; }
+        .avatar-container img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; cursor: pointer; }
+        .avatar-container:hover .avatar-overlay { opacity: 1; }
+        .avatar-overlay i { font-size: 20px; color: #fff; }
+        .profile-section h3 { font-size: 16px; font-weight: 500; letter-spacing: 0.5px; }
+
+        .nav-menu { list-style: none; margin-top: 25px; flex-grow: 1; }
+        .nav-item { padding: 14px 25px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { color: var(--text-main); background: rgba(255,255,255,0.03); border-left: 4px solid var(--accent-aqua); }
+        .nav-item i { width: 20px; font-size: 16px; }
+
+        .logout-container { padding: 0 25px; }
+        .btn-logout { width: 100%; background: var(--accent-pink); color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; }
+
+        /* CONTENT WORKSPACE PANEL */
+        .main-workspace { display: flex; flex-direction: column; overflow-y: auto; height: 100vh; }
+        
+        /* TOP HEADER CONTROL BAR */
+        .top-header { height: 75px; background: var(--bg-sidebar); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .top-header h2 { font-size: 20px; font-weight: 500; }
+        .header-controls { display: flex; align-items: center; gap: 30px; }
+        
+        .notification-bell { position: relative; cursor: pointer; font-size: 20px; color: var(--text-muted); transition: 0.2s; display: inline-block; width: 30px; height: 30px; text-align: center; line-height: 30px; }
+        .notification-bell:hover { color: var(--text-main); }
+        .notif-badge { position: absolute; top: -5px; right: -5px; background: var(--accent-pink); color: white; border-radius: 50%; font-size: 10px; font-weight: 700; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-sidebar); z-index: 10; }
+
+        .workspace-content { padding: 40px; flex-grow: 1; }
+        
+        /* GENERAL WORKSPACE STRUCTURE ELEMENTS */
+        .view-section { display: none; }
+        .view-section.active-view { display: block; }
+        
+        .grid-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; align-items: start; }
+        @media(max-width: 1100px) { .grid-two-col { grid-template-columns: 1fr; } }
+
+        .card { background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); box-shadow: 0 10px 25px rgba(0,0,0,0.15); margin-bottom: 25px; }
+        .card h3 { font-size: 18px; font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; }
+
+        /* METRIC CARDS ROW */
+        .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: linear-gradient(135deg, #243b6b, #1b3059); border-radius: 12px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+        .metric-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent-aqua); }
+        .metric-card.pink::before { background: var(--accent-pink); }
+        .metric-card.orange::before { background: var(--accent-orange); }
+        .metric-card h4 { font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+        .metric-card .value { font-size: 32px; font-weight: 600; color: #fff; margin-bottom: 5px; }
+        .metric-card p { font-size: 12px; color: var(--text-muted); }
+
+        /* FORM MANAGEMENT STYLING */
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 6px; color: #fff; font-size: 14px; outline: none; transition: 0.2s; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-aqua); }
+        
+        .btn-submit { background: var(--accent-aqua); color: #000; font-weight: 600; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-submit:hover { opacity: 0.9; }
+
+        /* DATA RENDER LISTS & TABLES */
+        .list-panel { max-height: 450px; overflow-y: auto; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 15px; border: 1px solid rgba(255,255,255,0.03); }
+        .node-row { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); padding: 15px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        .node-row:last-child { margin-bottom: 0; }
+        
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { padding: 12px; border-bottom: 2px solid rgba(255,255,255,0.08); font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .data-table td { padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13.5px; }
+
+        .btn-action-danger { background: var(--accent-pink); border: none; width: 32px; height: 32px; border-radius: 6px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-action-danger:hover { background: #e02463; }
+        .btn-action-toggle { background: rgba(255,255,255,0.08); border: none; padding: 6px 12px; border-radius: 4px; color: #fff; cursor: pointer; font-size: 12px; }
+        .btn-action-toggle.active-btn { background: var(--accent-aqua); color: #000; font-weight: 500; }
+
+        .message-card { background: rgba(255,255,255,0.02); border-left: 3px solid var(--accent-pink); padding: 15px; border-radius: 4px; margin-bottom: 12px; }
+        .message-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-container" class="auth-container">
+        <div class="auth-card">
+            <h2><i class="fas fa-shield-alt" style="color: var(--accent-aqua);"></i> Control Core Entry</h2>
+            <form id="login-form">
+                <div class="form-group"><label>Admin Username</label><input type="text" id="admin-username" required></div>
+                <div class="form-group"><label>Secure Password</label><input type="password" id="admin-password" required></div>
+                <button type="submit" class="btn-submit" style="width:100%; justify-content: center; margin-top:10px;">Authorize System</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard-container" class="dashboard-wrapper hidden">
+        
+        <aside class="sidebar">
+            <div class="profile-section">
+                <div class="avatar-container">
+                    <img id="profile-avatar" src="https://via.placeholder.com/100" alt="Avatar">
+                    <div class="avatar-overlay" onclick="document.getElementById('hidden-avatar-input').click()">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <form id="hidden-profile-form" class="hidden">
+                    <input type="file" id="hidden-avatar-input" accept="image/*">
+                </form>
+                <h3>SM FERDOUS AHMMED</h3>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top:4px;">System Operator</p>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-menu-dashboard nav-item active" data-target="section-dashboard"><i class="fas fa-chart-pie"></i>Dashboard</li>
+                <li class="nav-item" data-target="section-experience"><i class="fas fa-briefcase"></i>Experience</li>
+                <li class="nav-item" data-target="section-skills"><i class="fas fa-layer-group"></i>Technical Skills</li>
+                <li class="nav-item" data-target="section-projects"><i class="fas fa-tasks"></i>Projects Matrix</li>
+                <li class="nav-item" data-target="section-assets"><i class="fas fa-folder-open"></i>System Assets</li>
+            </ul>
+
+            <div class="logout-container">
+                <button id="logout-btn" class="btn-logout"><i class="fas fa-sign-out-alt"></i>Terminate Session</button>
+            </div>
+        </aside>
+
+        <main class="main-workspace">
+            <header class="top-header">
+                <h2 id="workspace-title">Core Overview Dashboard</h2>
+                <div class="header-controls">
+                    <div class="notification-bell" id="top-notification-bell">
+                        <i class="fas fa-envelope"></i>
+                        <span class="notif-badge" id="notif-counter-badge">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="workspace-content">
+                
+                <section id="section-dashboard" class="view-section active-view">
+                    <div class="metrics-row">
+                        <div class="metric-card">
+                            <h4>Active Projects</h4>
+                            <div class="value" id="metric-active-projects">0</div>
+                            <p>Live instances on production website</p>
+                        </div>
+                        <div class="metric-card pink">
+                            <h4>Inbox Messages</h4>
+                            <div class="value" id="metric-total-messages">0</div>
+                            <p>Captured communication logs</p>
+                        </div>
+                        <div class="metric-card orange">
+                            <h4>Timeline Milestones</h4>
+                            <div class="value" id="metric-total-experience">0</div>
+                            <p>Registered work timeline nodes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3><i class="fas fa-envelope-open-text" style="color: var(--accent-pink);"></i> Urgent Client Communications Vault</h3>
+                        <div class="list-panel" id="dashboard-messages-container"></div>
+                    </div>
+                </section>
+
+                <section id="section-experience" class="view-section">
+                    <div class="grid-two-col">
+                        <div class="card">
+                            <h3><i class="fas fa-plus-circle"></i> Add Timeline Milestone</h3>
+                            <form id="add-exp-form">
+                                <div class="form-group"><label>Job Title / Role</label><input type="text" id="exp-title" required></div>
+                                <div class="form-group"><label>Company Name</label><input type="text" id="exp-company" required></div>
+                                <div class="form-group"><label>Operations Location</label><input type="text" id="exp-location" required></div>
+                                <div class="form-group"><label>Employment Period Window</label><input type="text" id="exp-period" placeholder="e.g. June 2024 - Present" required></div>
+                                <div class="form-group">
+                                    <label>Core Responsibilities (One entry per line)</label>
+                                    <textarea id="exp-responsibilities" rows="5" required></textarea>
+                                </div>
+                                <div class="form-group"><label>Sorting Layout Index Priority</label><input type="number" id="exp-order" value="0"></div>
+                                <button type="submit" class="btn-submit">Commit Node</button>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-list-ol"></i> Synchronized History Matrix</h3>
+                            <div class="list-panel" id="admin-experience-container"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="section-skills" class="view-section">
+                    <div class="grid-two-col">
+                        <div class="card">
+                            <h3><i class="fas fa-tools"></i> Provision Skill Component</h3>
+                            <form id="add-skill-form">
+                                <div class="form-group"><label>Category Title</label><input type="text" id="skill-category" placeholder="e.g. Frontend Architecture" required></div>
+                                <div class="form-group"><label>FontAwesome Icon Class String</label><input type="text" id="skill-icon" placeholder="fab fa-react" required></div>
+                                <div class="form-group"><label>Skills Substring Array Collection</label><input type="text" id="skills-list" placeholder="React, Vue, HTML5" required></div>
+                                <div class="form-group"><label>Hex Accent Glow Color</label><input type="text" id="skill-color" value="#00e5ff"></div>
+                                <button type="submit" class="btn-submit">Deploy Block</button>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-cubes"></i> Mounted Skill Components</h3>
+                            <div class="list-panel" id="admin-skills-container"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="section-projects" class="view-section">
+                    <div class="grid-two-col">
+                        <div class="card">
+                            <h3><i class="fas fa-folder-plus"></i> Compile Project Asset</h3>
+                            <form id="project-form">
+                                <div class="form-group"><label>Project Title</label><input type="text" id="proj-title" required></div>
+                                <div class="form-group"><label>Description Metric Summary</label><textarea id="proj-desc" rows="4" placeholder="Include 'IoT' or 'Smart' to flag as automated system hardware profile." required></textarea></div>
+                                <div class="form-group"><label>Production Destination URL</label><input type="url" id="proj-link"></div>
+                                <div class="form-group"><label>Media Document File</label><input type="file" id="proj-file" accept="image/*" required></div>
+                                <button type="submit" class="btn-submit">Deploy Asset Instance</button>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-database"></i> Managed Asset Matrix</h3>
+                            <div style="overflow-x: auto;">
+                                <table class="data-table">
+                                    <thead><tr><th>Image</th><th>Title</th><th>Status</th><th>Action</th></tr></thead>
+                                    <tbody id="projects-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="section-assets" class="view-section">
+                    <div class="grid-two-col">
+                        <div class="card">
+                            <h3><i class="fas fa-file-pdf"></i> Synchronize Document Track (CV Asset)</h3>
+                            <form id="cv-upload-form" style="display: flex; flex-direction: column; gap:15px;">
+                                <input type="file" id="cv-file" accept=".pdf" required style="background: rgba(0,0,0,0.2); padding: 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+                                <button type="submit" class="btn-submit" style="width: max-content;">Deploy Static Document</button>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-info-circle"></i> View Statistics & Logs</h3>
+                            <p style="opacity:0.7; font-size:14px; line-height:1.6;">Use the main Dashboard menu link to view live incoming message streams.</p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
