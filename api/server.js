@@ -124,10 +124,10 @@ app.post('/api/auth/login', async (req, res) => {
         const hashedFallbackPassword = await bcrypt.hash(fallbackPassword, 10);
         user = new User({ username: 'admin', password: hashedFallbackPassword });
         await user.save();
-    } else if (user && username === 'admin' && process.env.ADMIN_PASSWORD) {
+    } else if (user && username === 'admin') {
         const dbPasswordMatch = await bcrypt.compare(password, user.password);
-        if (!dbPasswordMatch && password === process.env.ADMIN_PASSWORD) {
-            user.password = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+        if (!dbPasswordMatch && password === fallbackPassword) {
+            user.password = await bcrypt.hash(fallbackPassword, 10);
             await user.save();
         }
     }
