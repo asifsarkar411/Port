@@ -17,6 +17,19 @@ const logoutBtn = document.getElementById('logout-btn');
 let token = localStorage.getItem('adminToken');
 if (token) showDashboard();
 
+async function authFetch(url, options = {}) {
+    if (!options.headers) {
+        options.headers = {};
+    }
+    options.headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, options);
+    if (res.status === 401 || res.status === 400) {
+        showLogin();
+        throw new Error('Unauthorized session terminated.');
+    }
+    return res;
+}
+
 function showDashboard() {
     loginContainer.classList.add('hidden');
     dashboardContainer.classList.remove('hidden');
@@ -107,9 +120,8 @@ document.getElementById('hidden-avatar-input').addEventListener('change', async 
     const fd = new FormData();
     fd.append('profileImage', e.target.files[0]);
     
-    const res = await fetch(`${API_URL}/profile`, { 
+    const res = await authFetch(`${API_URL}/profile`, { 
         method: 'POST', 
-        headers: { 'Authorization': `Bearer ${token}` }, 
         body: fd 
     });
     if (res.ok) {
@@ -152,9 +164,9 @@ document.getElementById('add-exp-form').addEventListener('submit', async (e) => 
         order: parseInt(document.getElementById('exp-order').value) || 0
     };
 
-    const res = await fetch(`${API_URL}/admin/experience`, {
+    const res = await authFetch(`${API_URL}/admin/experience`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     });
 
@@ -166,7 +178,7 @@ document.getElementById('add-exp-form').addEventListener('submit', async (e) => 
 
 window.deleteExperience = async (id) => {
     if (confirm("Remove experience timeline record node instance?")) {
-        await fetch(`${API_URL}/admin/experience/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await authFetch(`${API_URL}/admin/experience/${id}`, { method: 'DELETE' });
         loadAdminExperience();
     }
 };
@@ -188,9 +200,9 @@ async function loadAdminSkills() {
 
 document.getElementById('add-skill-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    await fetch(`${API_URL}/admin/skills`, {
+    await authFetch(`${API_URL}/admin/skills`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             category: document.getElementById('skill-category').value,
             iconClass: document.getElementById('skill-icon').value,
@@ -205,14 +217,14 @@ document.getElementById('add-skill-form').addEventListener('submit', async (e) =
 
 window.deleteSkill = async (id) => {
     if (confirm("Delete targeted structural skill block element?")) {
-        await fetch(`${API_URL}/admin/skills/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await authFetch(`${API_URL}/admin/skills/${id}`, { method: 'DELETE' });
         loadAdminSkills();
     }
 };
 
 // FEATURED PORTFOLIO PROJECTS MATRIX CORE
 async function loadProjects() {
-    const res = await fetch(`${API_URL}/admin/projects`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const res = await authFetch(`${API_URL}/admin/projects`);
     const projects = await res.json();
     
     const activeCount = projects && Array.isArray(projects) ? projects.filter(p => p.status === 'active').length : 0;
@@ -235,8 +247,8 @@ async function loadProjects() {
     }
 }
 
-window.toggleStatus = async (id) => { await fetch(`${API_URL}/projects/${id}/status`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } }); loadProjects(); };
-window.deleteProject = async (id) => { if (confirm("Erase project?")) { await fetch(`${API_URL}/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); loadProjects(); } };
+window.toggleStatus = async (id) => { await authFetch(`${API_URL}/projects/${id}/status`, { method: 'PUT' }); loadProjects(); };
+window.deleteProject = async (id) => { if (confirm("Erase project?")) { await authFetch(`${API_URL}/projects/${id}`, { method: 'DELETE' }); loadProjects(); } };
 
 document.getElementById('project-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -246,7 +258,7 @@ document.getElementById('project-form').addEventListener('submit', async (e) => 
     fd.append('link', document.getElementById('proj-link').value);
     fd.append('projectImage', document.getElementById('proj-file').files[0]);
     
-    await fetch(`${API_URL}/projects`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
+    await authFetch(`${API_URL}/projects`, { method: 'POST', body: fd });
     document.getElementById('project-form').reset();
     loadProjects();
 });
@@ -256,13 +268,13 @@ document.getElementById('cv-upload-form').addEventListener('submit', async (e) =
     e.preventDefault();
     const fd = new FormData();
     fd.append('cvFile', document.getElementById('cv-file').files[0]);
-    const res = await fetch(`${API_URL}/admin/cv/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
+    const res = await authFetch(`${API_URL}/admin/cv/upload`, { method: 'POST', body: fd });
     if (res.ok) alert('Static PDF attachment reference compiled successfully.');
 });
 
 // REALTIME COMPASS LOG CAPTURE ENGINE PIPELINE
 async function loadAdminMessages() {
-    const res = await fetch(`${API_URL}/admin/messages`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const res = await authFetch(`${API_URL}/admin/messages`);
     const messages = await res.json();
     
     // SAFE FALLBACK DEFINED LENGTH CALCULATION

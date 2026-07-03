@@ -46,7 +46,6 @@ mongoose.connect(dbURI)
   })
   .catch(err => {
       console.error('❌ MongoDB Connection Error:', err);
-      process.exit(1); 
   });
 
 // --- MULTER CONFIGURATION ---
@@ -108,7 +107,7 @@ const verifyToken = (req, res, next) => {
         req.user = verified;
         next();
     } catch (err) {
-        res.status(400).json({ message: 'Invalid token confirmation context.' });
+        res.status(401).json({ message: 'Invalid token confirmation context.' });
     }
 };
 
@@ -205,6 +204,14 @@ app.post('/api/admin/experience', verifyToken, async (req, res) => {
 app.delete('/api/admin/experience/:id', verifyToken, async (req, res) => {
     await Experience.findByIdAndDelete(req.params.id);
     res.json({ message: 'Experience record removed.' });
+});
+
+// Global Error Handler Middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled Server Error:', err);
+    res.status(err.status || 500).json({
+        message: err.message || 'An internal server error occurred.'
+    });
 });
 
 // --- ENGINES LIFECYCLE ---
