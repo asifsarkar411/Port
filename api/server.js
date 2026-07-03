@@ -118,7 +118,7 @@ app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
     let user = await User.findOne({ username });
     
-    const fallbackPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const fallbackPassword = process.env.ADMIN_PASSWORD || 'MySecurePassword123';
     
     if (!user && username === 'admin') {
         const hashedFallbackPassword = await bcrypt.hash(fallbackPassword, 10);
