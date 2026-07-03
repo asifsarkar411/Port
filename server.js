@@ -8,38 +8,41 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+
 const PORT = process.env.PORT || 5000;
-
 const app = express();
-const JWT_SECRET = 'YOUR_SUPER_SECURE_SECRET_KEY_CHANGE_THIS';
 
-// Middleware
+// Secure your JWT Secret Key using your Environment Variables
+const JWT_SECRET = process.env.JWT_SECRET || 'YOUR_SUPER_SECURE_SECRET_KEY_CHANGE_THIS';
+
+// --- MIDDLEWARE LAYER ---
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Auto-generate target directories
-const uploadDir = path.join(__dirname, 'uploads');
+// Adjust uploads for Vercel's read-only serverless environment fallback (/tmp)
+const uploadDir = process.env.VERCEL ? path.join('/tmp', 'uploads') : path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
+app.use('/uploads', express.static(uploadDir));
 
-/// Connect to MongoDB Database Engine
+// --- DATA PERSISTENCE LAYER (MONGODB ATLAS ENGINE) ---
+const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio';
 
-mongoose.connect('mongodb://localhost:27017/portfolio')
-
+mongoose.connect(dbURI)
   .then(() => {
-
-      console.log('🚀 Backend engine running smoothly on port 5000');
-
-      console.log('✅ Connected successfully to MongoDB Compass local cluster');
-
+      const isLocal = dbURI.includes('localhost') || dbURI.includes('127.0.0.1');
+      console.log(`🚀 Backend engine running smoothly on port ${PORT}`);
+      console.log(`✅ Connected successfully to: ${isLocal ? 'MongoDB Compass Local Cluster' : 'MongoDB Atlas Cloud Cluster'}`);
   })
+  .catch(err => {
+      console.error('❌ MongoDB Connection Error:', err);
+      process.exit(1); 
+  });
 
-  .catch(err => console.error('❌ MongoDB Connection Error:', err));
-// Multer Storage Pipeline Rules Configuration
+// --- MULTER CONFIGURATION ---
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
+    destination: (req, file, cb) => cb(null, uploadDir), // Uses dynamic directory path
     filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage: storage });
@@ -100,12 +103,11 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-// --- CONTROLLER ENDPOINTS (API ROUTES) ---
+// --- API CONTROLLER ROUTES ---
 
 // 1. Authentication
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
-    // Base Seed Execution Fallback Check: Auto-provision default admin space if database is empty
     let user = await User.findOne({ username });
     if (!user && username === 'admin') {
         const hashedFallbackPassword = await bcrypt.hash('admin123', 10);
@@ -121,7 +123,7 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({ token });
 });
 
-// 2. Public & Secure Projects
+// 2. Projects
 app.get('/api/projects', async (req, res) => res.json(await Project.find({ status: 'active' })));
 app.get('/api/admin/projects', verifyToken, async (req, res) => res.json(await Project.find()));
 app.post('/api/projects', verifyToken, upload.single('projectImage'), async (req, res) => {
@@ -146,7 +148,7 @@ app.delete('/api/projects/:id', verifyToken, async (req, res) => {
     res.json({ message: 'Project document completely eliminated.' });
 });
 
-// 3. Profiles & Dynamic CV Assets
+// 3. Profiles & CV Assets
 app.get('/api/profile', async (req, res) => res.json(await Profile.findOne() || { avatarUrl: '' }));
 app.post('/api/profile', verifyToken, upload.single('profileImage'), async (req, res) => {
     let profile = await Profile.findOne();
@@ -157,7 +159,7 @@ app.post('/api/profile', verifyToken, upload.single('profileImage'), async (req,
 });
 app.get('/api/cv', async (req, res) => res.json(await Cv.findOne().sort({ uploadedAt: -1 }) || { fileUrl: '' }));
 app.post('/api/admin/cv/upload', verifyToken, upload.single('cvFile'), async (req, res) => {
-    await Cv.deleteMany({}); // Wipe stale pointers
+    await Cv.deleteMany({});
     const newCv = new Cv({ fileUrl: `/uploads/${req.file.filename}` });
     await newCv.save();
     res.json({ message: 'CV asset uploaded and attached successfully.' });
@@ -175,12 +177,12 @@ app.delete('/api/admin/skills/:id', verifyToken, async (req, res) => {
     res.json({ message: 'Skill entry removed.' });
 });
 
-// 5. Secure Form Messaging
+// 5. Contact Form Messages
 app.post('/api/contact', async (req, res) => {
     const { email, message } = req.body;
     if (!email || !message) return res.status(400).json({ success: false, error: 'Incomplete content streams' });
     await new Message({ email, message }).save();
-    res.status(201).json({ success: true, message: 'Message logged in local cluster collection.' });
+    res.status(201).json({ success: true, message: 'Message logged in collection.' });
 });
 app.get('/api/admin/messages', verifyToken, async (req, res) => res.json(await Message.find().sort({ timestamp: -1 })));
 
@@ -189,12 +191,19 @@ app.get('/api/experience', async (req, res) => res.json(await Experience.find().
 app.post('/api/admin/experience', verifyToken, async (req, res) => {
     const newExp = new Experience(req.body);
     await newExp.save();
-    res.json({ message: 'Experience timeline instance successfully synchronized.' });
+    res.json({ message: 'Experience timeline instance synchronized.' });
 });
 app.delete('/api/admin/experience/:id', verifyToken, async (req, res) => {
     await Experience.findByIdAndDelete(req.params.id);
     res.json({ message: 'Experience record removed.' });
 });
 
-// app.listen(5000);
+// --- ENGINES LIFECYCLE ---
+// Boots a local listener ONLY if not executing inside Vercel's cloud cluster
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`📡 Local server listening at http://localhost:${PORT}`);
+    });
+}
+
 module.exports = app;
