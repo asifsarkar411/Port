@@ -134,7 +134,11 @@ app.post('/api/auth/login', async (req, res) => {
     
     if (!user) return res.status(404).json({ message: 'User record not found.' });
     const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) return res.status(400).json({ message: 'Invalid structural credentials.' });
+    if (!isValid) {
+        return res.status(400).json({ 
+            message: `Invalid structural credentials. Submitted length: ${password ? password.length : 0}, Expected fallback length: ${fallbackPassword.length}.`
+        });
+    }
     
     const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '12h' });
     res.json({ token });
