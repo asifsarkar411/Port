@@ -41,7 +41,7 @@ function showDashboard() {
     loadAdminExperience();
     loadAdminSkills();
     loadAdminEducation();
-    loadAdminMessages();
+    loadAdminCV();
     loadProfileState();
 }
 
@@ -540,11 +540,28 @@ document.getElementById('cv-upload-form').addEventListener('submit', async (e) =
     const fd = new FormData();
     fd.append('cvFile', document.getElementById('cv-file').files[0]);
     const res = await authFetch(`${API_URL}/admin/cv/upload`, { method: 'POST', body: fd });
-    if (res.ok) alert('Static PDF attachment reference compiled successfully.');
+    if (res.ok) {
+        alert('Static PDF attachment reference compiled successfully.');
+        loadAdminCV();
+    }
 });
 
-// REALTIME COMPASS LOG CAPTURE ENGINE PIPELINE
-async function loadAdminMessages() {
+// LOAD ADMIN CV DISPLAY
+async function loadAdminCV() {
+    try {
+        const res = await authFetch(`${API_URL}/cv`);
+        const data = await res.json();
+        const container = document.getElementById('admin-cv-container');
+        if (!container) return;
+        if (!data.fileUrl) {
+            container.innerHTML = '<p style="opacity:0.5; font-size:13px;">No CV uploaded.</p>';
+            return;
+        }
+        const link = data.fileUrl.startsWith('http') || data.fileUrl.startsWith('data:') ? data.fileUrl : `${BASE_URL}${data.fileUrl}`;
+        container.innerHTML = `<a href="${link}" target="_blank" download="CV.pdf" class="btn btn-animated" style="display:inline-block; margin-top:10px;">View / Download CV</a>`;
+    } catch (e) { console.error('Error loading CV asset:', e); }
+}
+
     const res = await authFetch(`${API_URL}/admin/messages`);
     const messages = await res.json();
     
