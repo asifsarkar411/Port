@@ -1,4 +1,14 @@
-const API_URL = '/api';
+const getBaseUrl = () => {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname) {
+        if (window.location.port === '5000') {
+            return '';
+        }
+        return 'http://localhost:5000';
+    }
+    return '';
+};
+const BASE_URL = getBaseUrl();
+const API_URL = `${BASE_URL}/api`;
 const loginContainer = document.getElementById('login-container');
 const dashboardContainer = document.getElementById('dashboard-container');
 const loginForm = document.getElementById('login-form');
@@ -88,7 +98,7 @@ async function loadProfileState() {
     const data = await res.json();
     const avatar = document.getElementById('profile-avatar');
     if (avatar && data.avatarUrl) {
-        avatar.src = data.avatarUrl.startsWith('http') ? data.avatarUrl : `http://localhost:5000${data.avatarUrl}`;
+        avatar.src = data.avatarUrl.startsWith('http') ? data.avatarUrl : `${BASE_URL}${data.avatarUrl}`;
     }
 }
 
@@ -104,7 +114,7 @@ document.getElementById('hidden-avatar-input').addEventListener('change', async 
     });
     if (res.ok) {
         const data = await res.json();
-        document.getElementById('profile-avatar').src = `http://localhost:5000${data.avatarUrl}`;
+        document.getElementById('profile-avatar').src = `${BASE_URL}${data.avatarUrl}`;
     }
 });
 
@@ -215,7 +225,7 @@ async function loadProjects() {
         projects.forEach(p => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><img src="http://localhost:5000${p.imageUrl}" width="35" height="35" style="object-fit:cover; border-radius:4px;"></td>
+                <td><img src="${BASE_URL}${p.imageUrl}" width="35" height="35" style="object-fit:cover; border-radius:4px;"></td>
                 <td><strong>${p.title}</strong></td>
                 <td><button class="btn-action-toggle ${p.status === 'active' ? 'active-btn' : ''}" onclick="toggleStatus('${p._id}')">${p.status}</button></td>
                 <td><button class="btn-action-danger" onclick="deleteProject('${p._id}')"><i class="fas fa-trash-alt"></i></button></td>

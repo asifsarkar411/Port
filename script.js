@@ -1,4 +1,14 @@
-const API_URL = '/api';
+const getBaseUrl = () => {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname) {
+        if (window.location.port === '5000') {
+            return '';
+        }
+        return 'http://localhost:5000';
+    }
+    return '';
+};
+const BASE_URL = getBaseUrl();
+const API_URL = `${BASE_URL}/api`;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadPublicProfile();
@@ -26,7 +36,7 @@ async function loadPublicProfile() {
         const data = await res.json();
         const profileImg = document.getElementById('profile-avatar');
         if (profileImg && data.avatarUrl) {
-            profileImg.src = data.avatarUrl.startsWith('http') ? data.avatarUrl : `http://localhost:5000${data.avatarUrl}`;
+            profileImg.src = data.avatarUrl.startsWith('http') ? data.avatarUrl : `${BASE_URL}${data.avatarUrl}`;
         }
     } catch (e) { console.error('Error tracking image mapping reference downstream:', e); }
 }
@@ -100,7 +110,7 @@ async function loadPublicProjects() {
             const card = document.createElement('div');
             card.className = 'glass-card project-card';
             card.style.padding = '15px';
-            const img = project.imageUrl.startsWith('http') ? project.imageUrl : `http://localhost:5000${project.imageUrl}`;
+            const img = project.imageUrl.startsWith('http') ? project.imageUrl : `${BASE_URL}${project.imageUrl}`;
             
             card.innerHTML = `
                 <img src="${img}" alt="${project.title}" style="width:100%; height:200px; object-fit:cover; border-radius:6px; margin-bottom:15px;">
@@ -124,7 +134,7 @@ async function loadDynamicCv() {
         const data = await res.json();
         const cvBtn = document.getElementById('dynamicCvBtn');
         if (cvBtn && data.fileUrl) {
-            cvBtn.href = `http://localhost:5000${data.fileUrl}`;
+            cvBtn.href = `${BASE_URL}${data.fileUrl}`;
             cvBtn.removeAttribute('download');
         }
     } catch (e) { console.error(e); }
