@@ -39,6 +39,7 @@ async function loadPublicProfile() {
         const data = await res.json();
         const profileImg = document.getElementById('profile-avatar');
         if (profileImg && data.avatarUrl) {
+            profileImg.onerror = () => { profileImg.src = 'https://placehold.co/150'; };
             profileImg.src = (data.avatarUrl.startsWith('http') || data.avatarUrl.startsWith('data:')) ? data.avatarUrl : `${BASE_URL}${data.avatarUrl}`;
         }
     } catch (e) { console.error('Error tracking image mapping reference downstream:', e); }
@@ -116,7 +117,7 @@ async function loadPublicProjects() {
             const img = (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('data:')) ? project.imageUrl : `${BASE_URL}${project.imageUrl}`;
             
             card.innerHTML = `
-                <img src="${img}" alt="${project.title}" style="width:100%; height:200px; object-fit:cover; border-radius:6px; margin-bottom:15px;">
+                <img src="${img}" alt="${project.title}" style="width:100%; height:200px; object-fit:cover; border-radius:6px; margin-bottom:15px;" onerror="this.onerror=null; this.src='https://placehold.co/300x200?text=No+Image';">
                 <h3>${project.title}</h3>
                 <p style="margin: 10px 0; font-size:14px; opacity:0.8;">${project.description}</p>
                 ${project.link ? `<a href="${project.link}" target="_blank" class="btn btn-animated" style="display:inline-block; text-decoration:none; margin-top:10px; font-size:12px;">View Project Instance</a>` : ''}

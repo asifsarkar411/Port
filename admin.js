@@ -111,6 +111,7 @@ async function loadProfileState() {
     const data = await res.json();
     const avatar = document.getElementById('profile-avatar');
     if (avatar && data.avatarUrl) {
+        avatar.onerror = () => { avatar.src = 'https://placehold.co/100'; };
         avatar.src = (data.avatarUrl.startsWith('http') || data.avatarUrl.startsWith('data:')) ? data.avatarUrl : `${BASE_URL}${data.avatarUrl}`;
     }
 }
@@ -126,7 +127,9 @@ document.getElementById('hidden-avatar-input').addEventListener('change', async 
     });
     if (res.ok) {
         const data = await res.json();
-        document.getElementById('profile-avatar').src = (data.avatarUrl.startsWith('http') || data.avatarUrl.startsWith('data:')) ? data.avatarUrl : `${BASE_URL}${data.avatarUrl}`;
+        const avatar = document.getElementById('profile-avatar');
+        if (avatar) avatar.onerror = () => { avatar.src = 'https://placehold.co/100'; };
+        avatar.src = (data.avatarUrl.startsWith('http') || data.avatarUrl.startsWith('data:')) ? data.avatarUrl : `${BASE_URL}${data.avatarUrl}`;
     }
 });
 
@@ -237,7 +240,7 @@ async function loadProjects() {
         projects.forEach(p => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><img src="${(p.imageUrl.startsWith('http') || p.imageUrl.startsWith('data:')) ? p.imageUrl : `${BASE_URL}${p.imageUrl}`}" width="35" height="35" style="object-fit:cover; border-radius:4px;"></td>
+                <td><img src="${(p.imageUrl.startsWith('http') || p.imageUrl.startsWith('data:')) ? p.imageUrl : `${BASE_URL}${p.imageUrl}`}" width="35" height="35" style="object-fit:cover; border-radius:4px;" onerror="this.onerror=null; this.src='https://placehold.co/35';"></td>
                 <td><strong>${p.title}</strong></td>
                 <td><button class="btn-action-toggle ${p.status === 'active' ? 'active-btn' : ''}" onclick="toggleStatus('${p._id}')">${p.status}</button></td>
                 <td><button class="btn-action-danger" onclick="deleteProject('${p._id}')"><i class="fas fa-trash-alt"></i></button></td>
