@@ -117,10 +117,19 @@ const verifyToken = (req, res, next) => {
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
     let user = await User.findOne({ username });
+    
+    const fallbackPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    
     if (!user && username === 'admin') {
-        const hashedFallbackPassword = await bcrypt.hash('admin123', 10);
+        const hashedFallbackPassword = await bcrypt.hash(fallbackPassword, 10);
         user = new User({ username: 'admin', password: hashedFallbackPassword });
         await user.save();
+    } else if (user && username === 'admin' && process.env.ADMIN_PASSWORD) {
+        const dbPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!dbPasswordMatch && password === process.env.ADMIN_PASSWORD) {
+            user.password = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+            await user.save();
+        }
     }
     
     if (!user) return res.status(404).json({ message: 'User record not found.' });

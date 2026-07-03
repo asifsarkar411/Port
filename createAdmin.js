@@ -1,10 +1,13 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Connect to your local database
-mongoose.connect('mongodb://localhost:27017/portfolio')
+const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio';
+
+mongoose.connect(dbURI)
   .then(async () => {
-    console.log('Connected to MongoDB to create admin...');
+    const isLocal = dbURI.includes('localhost') || dbURI.includes('127.0.0.1');
+    console.log(`Connected to: ${isLocal ? 'Local Database' : 'MongoDB Atlas Cloud Database'}`);
     
     // CHANGE THESE TO YOUR DESIRED CREDENTIALS
     const adminUsername = 'admin'; 
@@ -19,14 +22,21 @@ mongoose.connect('mongodb://localhost:27017/portfolio')
     const User = mongoose.model('User', UserSchema);
 
     // Check if user already exists
-    const existingUser = await User.findOne({ username: adminUsername });
-    if (existingUser) {
-      console.log(`User "${adminUsername}" already exists!`);
+    let user = await User.findOne({ username: adminUsername });
+    if (user) {
+      console.log(`User "${adminUsername}" already exists. Updating password to new credentials...`);
+      user.password = hashedPassword;
+      await user.save();
+      console.log('--------------------------------------------------');
+      console.log('✅ ADMIN PASSWORD UPDATED SUCCESSFULLY!');
+      console.log(`Username: ${adminUsername}`);
+      console.log(`Password: ${adminPassword}`);
+      console.log('--------------------------------------------------');
       process.exit();
     }
 
-    const admin = new User({ username: adminUsername, password: hashedPassword });
-    await admin.save();
+    user = new User({ username: adminUsername, password: hashedPassword });
+    await user.save();
 
     console.log('--------------------------------------------------');
     console.log('✅ ADMIN USER CREATED SUCCESSFULLY!');
@@ -35,4 +45,7 @@ mongoose.connect('mongodb://localhost:27017/portfolio')
     console.log('--------------------------------------------------');
     process.exit();
   })
-  .catch(err => console.error(err));
+  .catch(err => {
+    console.error('❌ Connection or Execution error:', err);
+    process.exit(1);
+  });
