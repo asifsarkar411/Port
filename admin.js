@@ -86,23 +86,33 @@ function setupNavigationRouting() {
 }
 
 // SECURE Gateway User Auth Entry Execution
+// SECURE Gateway User Auth Entry Execution
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            username: document.getElementById('admin-username').value,
-            password: document.getElementById('admin-password').value
-        })
-    });
-    const data = await res.json();
-    if (res.ok) {
+    try {
+        const res = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: document.getElementById('admin-username').value,
+                password: document.getElementById('admin-password').value
+            })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            // ❌ login failed → show message, clear token, stay on login page
+            alert(data.message || 'Authentication failed');
+            localStorage.removeItem('adminToken');
+            token = null;
+            return;
+        }
+        // ✅ login succeeded → store token and go to dashboard
         localStorage.setItem('adminToken', data.token);
         token = data.token;
-        showDashboard();
-    } else {
-        alert('Authentication failed: ' + data.message);
+        showDashboard(); // only called on success
+    } catch (e) {
+        console.error('Login error:', e);
+        alert('Authentication failed: Server error during authentication.');
     }
 });
 
