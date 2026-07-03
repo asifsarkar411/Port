@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -6,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const PORT = process.env.PORT || 5000;
 
 const app = express();
 const JWT_SECRET = 'YOUR_SUPER_SECURE_SECRET_KEY_CHANGE_THIS';
@@ -21,14 +24,19 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Connect to MongoDB Database Engine
-mongoose.connect('mongodb://localhost:27017/portfolio')
-  .then(() => {
-      console.log('🚀 Backend engine running smoothly on port 5000');
-      console.log('✅ Connected successfully to MongoDB Compass local cluster');
-  })
-  .catch(err => console.error('❌ MongoDB Connection Error:', err));
+/// Connect to MongoDB Database Engine
 
+mongoose.connect('mongodb://localhost:27017/portfolio')
+
+  .then(() => {
+
+      console.log('🚀 Backend engine running smoothly on port 5000');
+
+      console.log('✅ Connected successfully to MongoDB Compass local cluster');
+
+  })
+
+  .catch(err => console.error('❌ MongoDB Connection Error:', err));
 // Multer Storage Pipeline Rules Configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -188,4 +196,5 @@ app.delete('/api/admin/experience/:id', verifyToken, async (req, res) => {
     res.json({ message: 'Experience record removed.' });
 });
 
-app.listen(5000);
+// app.listen(5000);
+module.exports = app;
