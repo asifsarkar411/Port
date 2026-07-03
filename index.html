@@ -58,15 +58,7 @@
                     <div><strong>3+</strong><br><span>Frameworks</span></div>
                 </div>
             </div>
-            <div class="education-wrapper animate-right" id="education-container">
-                <div class="glass-card edu-card">
-                    <span class="edu-year">2022 - 2026</span>
-                    <div class="edu-header">
-                        <h4>B.Sc. in Computer Science and Engineering</h4>
-                        <h5>Bangladesh University of Business and Technology (BUBT)</h5>
-                    </div>
-                    <p class="edu-desc" style="opacity: 0.8; margin-top: 10px;">Ongoing (Final Semester Pipeline Completion Mode).</p>
-                </div>
+            <div class="education-wrapper animate-right" id="education-container" style="display: flex; flex-direction: column; gap: 20px;">
             </div>
         </div>
     </section>
@@ -85,12 +77,7 @@
 
     <section id="projects" class="section-pad">
         <h2 class="section-title">Featured Projects</h2>
-        
-        <h3 class="category-title" style="margin-bottom: 20px; color: aqua; padding-left: 10px; border-left: 3px solid aqua;">Web Applications</h3>
-        <div class="projects-grid" id="web-projects-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 50px;"></div>
-        
-        <h3 class="category-title" style="margin-bottom: 20px; color: #fca311; padding-left: 10px; border-left: 3px solid #fca311;">IoT & Systems Automation</h3>
-        <div class="projects-grid" id="iot-projects-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;"></div>
+        <div id="dynamic-projects-root"></div>
     </section>
 
     <section id="contact" class="section-pad">

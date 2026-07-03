@@ -147,6 +147,7 @@
                 <li class="nav-item" data-target="section-experience"><i class="fas fa-briefcase"></i>Experience</li>
                 <li class="nav-item" data-target="section-skills"><i class="fas fa-layer-group"></i>Technical Skills</li>
                 <li class="nav-item" data-target="section-projects"><i class="fas fa-tasks"></i>Projects Matrix</li>
+                <li class="nav-item" data-target="section-education"><i class="fas fa-graduation-cap"></i>Education</li>
                 <li class="nav-item" data-target="section-assets"><i class="fas fa-folder-open"></i>System Assets</li>
             </ul>
 
@@ -196,8 +197,9 @@
                 <section id="section-experience" class="view-section">
                     <div class="grid-two-col">
                         <div class="card">
-                            <h3><i class="fas fa-plus-circle"></i> Add Timeline Milestone</h3>
+                            <h3><i class="fas fa-plus-circle"></i> <span id="exp-form-action">Add</span> Timeline Milestone</h3>
                             <form id="add-exp-form">
+                                <input type="hidden" id="exp-id">
                                 <div class="form-group"><label>Job Title / Role</label><input type="text" id="exp-title" required></div>
                                 <div class="form-group"><label>Company Name</label><input type="text" id="exp-company" required></div>
                                 <div class="form-group"><label>Operations Location</label><input type="text" id="exp-location" required></div>
@@ -207,7 +209,10 @@
                                     <textarea id="exp-responsibilities" rows="5" required></textarea>
                                 </div>
                                 <div class="form-group"><label>Sorting Layout Index Priority</label><input type="number" id="exp-order" value="0"></div>
-                                <button type="submit" class="btn-submit">Commit Node</button>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="submit" class="btn-submit">Commit Node</button>
+                                    <button type="button" id="btn-cancel-exp-edit" class="btn-action-toggle hidden" style="padding: 10px 15px;">Cancel</button>
+                                </div>
                             </form>
                         </div>
                         <div class="card">
@@ -220,13 +225,17 @@
                 <section id="section-skills" class="view-section">
                     <div class="grid-two-col">
                         <div class="card">
-                            <h3><i class="fas fa-tools"></i> Provision Skill Component</h3>
+                            <h3><i class="fas fa-tools"></i> <span id="skill-form-action">Provision</span> Skill Component</h3>
                             <form id="add-skill-form">
+                                <input type="hidden" id="skill-id">
                                 <div class="form-group"><label>Category Title</label><input type="text" id="skill-category" placeholder="e.g. Frontend Architecture" required></div>
                                 <div class="form-group"><label>FontAwesome Icon Class String</label><input type="text" id="skill-icon" placeholder="fab fa-react" required></div>
                                 <div class="form-group"><label>Skills Substring Array Collection</label><input type="text" id="skills-list" placeholder="React, Vue, HTML5" required></div>
                                 <div class="form-group"><label>Hex Accent Glow Color</label><input type="text" id="skill-color" value="#00e5ff"></div>
-                                <button type="submit" class="btn-submit">Deploy Block</button>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="submit" class="btn-submit">Deploy Block</button>
+                                    <button type="button" id="btn-cancel-skill-edit" class="btn-action-toggle hidden" style="padding: 10px 15px;">Cancel</button>
+                                </div>
                             </form>
                         </div>
                         <div class="card">
@@ -238,24 +247,69 @@
 
                 <section id="section-projects" class="view-section">
                     <div class="grid-two-col">
-                        <div class="card">
-                            <h3><i class="fas fa-folder-plus"></i> Compile Project Asset</h3>
-                            <form id="project-form">
-                                <div class="form-group"><label>Project Title</label><input type="text" id="proj-title" required></div>
-                                <div class="form-group"><label>Description Metric Summary</label><textarea id="proj-desc" rows="4" placeholder="Include 'IoT' or 'Smart' to flag as automated system hardware profile." required></textarea></div>
-                                <div class="form-group"><label>Production Destination URL</label><input type="url" id="proj-link"></div>
-                                <div class="form-group"><label>Media Document File</label><input type="file" id="proj-file" accept="image/*" required></div>
-                                <button type="submit" class="btn-submit">Deploy Asset Instance</button>
-                            </form>
+                        <div style="display: flex; flex-direction: column; gap: 25px;">
+                            <div class="card">
+                                <h3><i class="fas fa-folder-plus"></i> <span id="proj-form-action">Compile</span> Project Asset</h3>
+                                <form id="project-form">
+                                    <input type="hidden" id="proj-id">
+                                    <div class="form-group"><label>Project Title *</label><input type="text" id="proj-title" required></div>
+                                    <div class="form-group">
+                                        <label>Project Category Type *</label>
+                                        <select id="proj-type" required></select>
+                                    </div>
+                                    <div class="form-group"><label>Description Metric Summary *</label><textarea id="proj-desc" rows="4" placeholder="Brief summary of your project accomplishments" required></textarea></div>
+                                    <div class="form-group"><label>Production Destination URL</label><input type="url" id="proj-link"></div>
+                                    <div class="form-group"><label>Media Document File</label><input type="file" id="proj-file" accept="image/*" required></div>
+                                    <div style="display: flex; gap: 10px;">
+                                        <button type="submit" class="btn-submit">Deploy Asset Instance</button>
+                                        <button type="button" id="btn-cancel-proj-edit" class="btn-action-toggle hidden" style="padding: 10px 15px;">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="card">
+                                <h3><i class="fas fa-tags"></i> Manage Project Categories</h3>
+                                <form id="add-type-form">
+                                    <div class="form-group">
+                                        <label>New Category Name</label>
+                                        <input type="text" id="new-type-name" placeholder="e.g. Mobile Apps" required>
+                                    </div>
+                                    <button type="submit" class="btn-submit">Add Category</button>
+                                </form>
+                                <div class="list-panel" id="admin-types-container" style="max-height: 200px; margin-top: 15px;"></div>
+                            </div>
                         </div>
                         <div class="card">
                             <h3><i class="fas fa-database"></i> Managed Asset Matrix</h3>
                             <div style="overflow-x: auto;">
                                 <table class="data-table">
-                                    <thead><tr><th>Image</th><th>Title</th><th>Status</th><th>Action</th></tr></thead>
+                                    <thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Status</th><th>Action</th></tr></thead>
                                     <tbody id="projects-table-body"></tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="section-education" class="view-section">
+                    <div class="grid-two-col">
+                        <div class="card">
+                            <h3><i class="fas fa-plus-circle"></i> <span id="edu-form-action">Add</span> Education Node</h3>
+                            <form id="add-edu-form">
+                                <input type="hidden" id="edu-id">
+                                <div class="form-group"><label>School / University Name *</label><input type="text" id="edu-school" required></div>
+                                <div class="form-group"><label>Degree / Certificate Name *</label><input type="text" id="edu-degree" required></div>
+                                <div class="form-group"><label>Time Window Period *</label><input type="text" id="edu-period" placeholder="e.g. 2022 - 2026" required></div>
+                                <div class="form-group"><label>Description Summary *</label><input type="text" id="edu-description" placeholder="e.g. Ongoing (Final Semester)" required></div>
+                                <div class="form-group"><label>Sorting Layout Index Priority</label><input type="number" id="edu-order" value="0"></div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="submit" class="btn-submit">Commit Node</button>
+                                    <button type="button" id="btn-cancel-edu-edit" class="btn-action-toggle hidden" style="padding: 10px 15px;">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-list-ol"></i> Synchronized Education Matrix</h3>
+                            <div class="list-panel" id="admin-education-container"></div>
                         </div>
                     </div>
                 </section>

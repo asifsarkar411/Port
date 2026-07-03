@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPublicExperience();
     loadPublicSkills();
     loadPublicProjects();
+    loadPublicEducation();
     loadDynamicCv();
     setupContactForm();
 
@@ -102,34 +103,78 @@ async function loadPublicSkills() {
 
 async function loadPublicProjects() {
     try {
-        const res = await fetch(`${API_URL}/projects`);
-        const projects = await res.json();
-        const webContainer = document.getElementById('web-projects-container');
-        const iotContainer = document.getElementById('iot-projects-container');
+        const [projectsRes, typesRes] = await Promise.all([
+            fetch(`${API_URL}/projects`),
+            fetch(`${API_URL}/project-types`)
+        ]);
+        const projects = await projectsRes.json();
+        const categories = await typesRes.json();
+        
+        const rootContainer = document.getElementById('dynamic-projects-root');
+        if (!rootContainer) return;
+        rootContainer.innerHTML = '';
+        
+        if (!projects || projects.length === 0) {
+            rootContainer.innerHTML = '<p style="text-align:center; opacity:0.6;">No projects published yet.</p>';
+            return;
+        }
 
-        if (webContainer) webContainer.innerHTML = '';
-        if (iotContainer) iotContainer.innerHTML = '';
+        const projectsByCategory = {};
+        categories.forEach(cat => {
+            projectsByCategory[cat.name] = [];
+        });
+        
+        if (!projectsByCategory['Web Development']) projectsByCategory['Web Development'] = [];
+        if (!projectsByCategory['IoT & Systems Automation']) projectsByCategory['IoT & Systems Automation'] = [];
 
         projects.forEach(project => {
-            const card = document.createElement('div');
-            card.className = 'glass-card project-card';
-            card.style.padding = '15px';
-            const img = (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('data:')) ? project.imageUrl : `${BASE_URL}${project.imageUrl}`;
-            
-            card.innerHTML = `
-                <img src="${img}" alt="${project.title}" style="width:100%; height:200px; object-fit:cover; border-radius:6px; margin-bottom:15px;" onerror="this.onerror=null; this.src='https://placehold.co/300x200?text=No+Image';">
-                <h3>${project.title}</h3>
-                <p style="margin: 10px 0; font-size:14px; opacity:0.8;">${project.description}</p>
-                ${project.link ? `<a href="${project.link}" target="_blank" class="btn btn-animated" style="display:inline-block; text-decoration:none; margin-top:10px; font-size:12px;">View Project Instance</a>` : ''}
-            `;
-            
-            if (project.description?.toLowerCase().includes('iot') || project.title?.toLowerCase().includes('smart')) {
-                iotContainer?.appendChild(card);
-            } else {
-                webContainer?.appendChild(card);
+            const catName = project.projectType || 'Web Development';
+            if (!projectsByCategory[catName]) {
+                projectsByCategory[catName] = [];
             }
+            projectsByCategory[catName].push(project);
         });
-    } catch (e) { console.error(e); }
+
+        const colors = ['aqua', '#fca311', '#ff357a', '#00c6ff', '#fca311'];
+        let colorIdx = 0;
+        const categoriesList = [...new Set([...categories.map(c => c.name), ...Object.keys(projectsByCategory)])];
+
+        categoriesList.forEach(catName => {
+            const catProjects = projectsByCategory[catName];
+            if (!catProjects || catProjects.length === 0) return;
+
+            const color = colors[colorIdx % colors.length];
+            colorIdx++;
+
+            const heading = document.createElement('h3');
+            heading.className = 'category-title';
+            heading.style.cssText = `margin-bottom: 20px; color: ${color}; padding-left: 10px; border-left: 3px solid ${color}; margin-top: 40px;`;
+            heading.innerText = catName;
+
+            const grid = document.createElement('div');
+            grid.className = 'projects-grid';
+            grid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 50px;';
+
+            catProjects.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'glass-card project-card';
+                card.style.padding = '15px';
+                
+                const imgUrl = (project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('data:'))) ? project.imageUrl : `${BASE_URL}${project.imageUrl || ''}`;
+                
+                card.innerHTML = `
+                    <img src="${imgUrl}" alt="${project.title}" style="width:100%; height:200px; object-fit:cover; border-radius:6px; margin-bottom:15px;" onerror="this.onerror=null; this.src='https://placehold.co/300x200?text=No+Image';">
+                    <h3>${project.title}</h3>
+                    <p style="margin: 10px 0; font-size:14px; opacity:0.8;">${project.description}</p>
+                    ${project.link ? `<a href="${project.link}" target="_blank" class="btn btn-animated" style="display:inline-block; text-decoration:none; margin-top:10px; font-size:12px;">View Project Instance</a>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+
+            rootContainer.appendChild(heading);
+            rootContainer.appendChild(grid);
+        });
+    } catch (e) { console.error('Error loading projects dynamically:', e); }
 }
 
 async function loadDynamicCv() {
@@ -173,4 +218,29 @@ function setupContactForm() {
         }
         btn.disabled = false;
     });
+}
+
+async function loadPublicEducation() {
+    try {
+        const res = await fetch(`${API_URL}/education`);
+        const data = await res.json();
+        const container = document.getElementById('education-container');
+        if (!container) return;
+
+        if (data.length === 0) {
+            container.innerHTML = '<p style="opacity:0.6; text-align:center; width:100%;">Education history is currently empty.</p>';
+            return;
+        }
+
+        container.innerHTML = data.map(edu => `
+            <div class="glass-card edu-card animate-right" style="width:100%; padding:25px; margin-bottom:15px; position:relative;">
+                <span class="edu-year" style="display:block; font-weight:600; color:aqua; margin-bottom:10px;"><i class="fas fa-calendar-alt"></i> ${edu.period}</span>
+                <div class="edu-header">
+                    <h4 style="color:#fff; margin-bottom:5px;">${edu.degree}</h4>
+                    <h5 style="color:aqua; font-weight:400;">${edu.schoolName}</h5>
+                </div>
+                <p class="edu-desc" style="opacity:0.8; margin-top:10px; font-size:14px; line-height:1.5;">${edu.description}</p>
+            </div>
+        `).join('');
+    } catch (err) { console.error('Error compiling education timeline segments:', err); }
 }

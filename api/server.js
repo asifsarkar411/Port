@@ -34,10 +34,24 @@ if (!process.env.VERCEL) {
 const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio';
 
 mongoose.connect(dbURI)
-  .then(() => {
+  .then(async () => {
       const isLocal = dbURI.includes('localhost') || dbURI.includes('127.0.0.1');
       console.log(`🚀 Backend engine running smoothly on port ${PORT}`);
       console.log(`✅ Connected successfully to: ${isLocal ? 'MongoDB Compass Local Cluster' : 'MongoDB Atlas Cloud Cluster'}`);
+      
+      // Auto-seed default project categories
+      try {
+          const count = await ProjectType.countDocuments();
+          if (count === 0) {
+              await ProjectType.insertMany([
+                  { name: 'Web Development' },
+                  { name: 'IoT & Systems Automation' }
+              ]);
+              console.log('🌱 Seeded default project categories.');
+          }
+      } catch (err) {
+          console.error('Error seeding project categories:', err);
+      }
   })
   .catch(err => {
       console.error('❌ MongoDB Connection Error:', err);
@@ -63,7 +77,12 @@ const Project = mongoose.model('Project', new mongoose.Schema({
     description: String,
     link: String,
     imageUrl: String,
+    projectType: { type: String, default: 'Web Development' },
     status: { type: String, default: 'active' }
+}));
+
+const ProjectType = mongoose.model('ProjectType', new mongoose.Schema({
+    name: { type: String, required: true, unique: true }
 }));
 
 const Profile = mongoose.model('Profile', new mongoose.Schema({ avatarUrl: String }));
@@ -92,6 +111,14 @@ const Experience = mongoose.model('Experience', new mongoose.Schema({
     location: { type: String, required: true },
     period: { type: String, required: true },
     responsibilities: { type: String, required: true },
+    order: { type: Number, default: 0 }
+}));
+
+const Education = mongoose.model('Education', new mongoose.Schema({
+    schoolName: { type: String, required: true },
+    degree: { type: String, required: true },
+    period: { type: String, required: true },
+    description: { type: String, required: true },
     order: { type: Number, default: 0 }
 }));
 
@@ -157,11 +184,30 @@ app.post('/api/projects', verifyToken, upload.single('projectImage'), async (req
         title: req.body.title,
         description: req.body.description,
         link: req.body.link,
+        projectType: req.body.projectType || 'Web Development',
         imageUrl: req.file ? fileToDataUrl(req.file) : '',
         status: 'active'
     });
     await newProject.save();
     res.json({ message: 'Project instance captured successfully!' });
+});
+app.put('/api/projects/:id', verifyToken, upload.single('projectImage'), async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ message: 'Project not found' });
+        project.title = req.body.title || project.title;
+        project.description = req.body.description || project.description;
+        project.link = req.body.link;
+        project.projectType = req.body.projectType || project.projectType;
+        if (req.file) {
+            project.imageUrl = fileToDataUrl(req.file);
+        }
+        await project.save();
+        res.json({ message: 'Project updated successfully!', project });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Error updating project.' });
+    }
 });
 app.put('/api/projects/:id/status', verifyToken, async (req, res) => {
     const project = await Project.findById(req.params.id);
@@ -172,6 +218,22 @@ app.put('/api/projects/:id/status', verifyToken, async (req, res) => {
 app.delete('/api/projects/:id', verifyToken, async (req, res) => {
     await Project.findByIdAndDelete(req.params.id);
     res.json({ message: 'Project document completely eliminated.' });
+});
+
+// Project Types Routes
+app.get('/api/project-types', async (req, res) => res.json(await ProjectType.find()));
+app.post('/api/admin/project-types', verifyToken, async (req, res) => {
+    try {
+        const newType = new ProjectType({ name: req.body.name });
+        await newType.save();
+        res.json({ message: 'Project category deployed successfully.', type: newType });
+    } catch (err) {
+        res.status(400).json({ message: 'Category duplicate or invalid.' });
+    }
+});
+app.delete('/api/admin/project-types/:id', verifyToken, async (req, res) => {
+    await ProjectType.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Project category removed.' });
 });
 
 // 3. Profiles & CV Assets
@@ -198,6 +260,14 @@ app.post('/api/admin/skills', verifyToken, async (req, res) => {
     await newSkill.save();
     res.json({ message: 'Technical skill card deployed.' });
 });
+app.put('/api/admin/skills/:id', verifyToken, async (req, res) => {
+    try {
+        const skill = await Skill.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ message: 'Technical skill card updated.', skill });
+    } catch (err) {
+        res.status(500).json({ message: 'Error updating skill.' });
+    }
+});
 app.delete('/api/admin/skills/:id', verifyToken, async (req, res) => {
     await Skill.findByIdAndDelete(req.params.id);
     res.json({ message: 'Skill entry removed.' });
@@ -219,9 +289,37 @@ app.post('/api/admin/experience', verifyToken, async (req, res) => {
     await newExp.save();
     res.json({ message: 'Experience timeline instance synchronized.' });
 });
+app.put('/api/admin/experience/:id', verifyToken, async (req, res) => {
+    try {
+        const exp = await Experience.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ message: 'Experience timeline instance updated.', exp });
+    } catch (err) {
+        res.status(500).json({ message: 'Error updating experience.' });
+    }
+});
 app.delete('/api/admin/experience/:id', verifyToken, async (req, res) => {
     await Experience.findByIdAndDelete(req.params.id);
     res.json({ message: 'Experience record removed.' });
+});
+
+// 7. Education Logic
+app.get('/api/education', async (req, res) => res.json(await Education.find().sort({ order: 1 })));
+app.post('/api/admin/education', verifyToken, async (req, res) => {
+    const newEdu = new Education(req.body);
+    await newEdu.save();
+    res.json({ message: 'Education history record synchronized.' });
+});
+app.put('/api/admin/education/:id', verifyToken, async (req, res) => {
+    try {
+        const edu = await Education.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ message: 'Education history record updated.', edu });
+    } catch (err) {
+        res.status(500).json({ message: 'Error updating education.' });
+    }
+});
+app.delete('/api/admin/education/:id', verifyToken, async (req, res) => {
+    await Education.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Education history record removed.' });
 });
 
 // Global Error Handler Middleware
