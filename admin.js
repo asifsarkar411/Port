@@ -43,6 +43,7 @@ function showDashboard() {
     loadAdminEducation();
     loadAdminCV();
     loadProfileState();
+    loadAdminMessages();
 }
 
 function showLogin() {
@@ -562,7 +563,36 @@ async function loadAdminCV() {
     } catch (e) { console.error('Error loading CV asset:', e); }
 }
 
-    const res = await authFetch(`${API_URL}/admin/messages`);
+async function loadAdminMessages() {
+    try {
+        const res = await authFetch(`${API_URL}/admin/messages`);
+        const messages = await res.json();
+
+        // SAFE FALLBACK DEFINED LENGTH CALCULATION
+        const messageCount = messages && Array.isArray(messages) ? messages.length : 0;
+        document.getElementById('notif-counter-badge').innerText = messageCount;
+        document.getElementById('metric-total-messages').innerText = messageCount;
+
+        const dashContainer = document.getElementById('dashboard-messages-container');
+        if (messageCount === 0) {
+            const structuralFallback = '<p style="opacity:0.5; font-size:13px; padding:10px;">Inbox empty.</p>';
+            dashContainer.innerHTML = structuralFallback;
+            return;
+        }
+        dashContainer.innerHTML = messages.map(m => `
+            <div class="message-card">
+                <div class="message-header">
+                    <strong style="color:var(--accent-aqua);">${m.email || 'Anonymous'}</strong>
+                    <span style="opacity:0.5;">${m.timestamp ? new Date(m.timestamp).toLocaleString() : ''}</span>
+                </div>
+                <div style="font-size:13px; line-height:1.5; color: #e1e7f0;">${m.message || ''}</div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error('Error loading admin messages:', e);
+    }
+}
+
     const messages = await res.json();
     
     // SAFE FALLBACK DEFINED LENGTH CALCULATION
