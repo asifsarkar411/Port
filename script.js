@@ -22,9 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth' });
+            const targetId = this.getAttribute('href');
+            if (targetId && targetId !== '#') {
+                const target = document.querySelector(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
             }
         });
     });
@@ -36,7 +39,7 @@ async function loadPublicProfile() {
         const data = await res.json();
         const profileImg = document.getElementById('profile-avatar');
         if (profileImg && data.avatarUrl) {
-            profileImg.src = data.avatarUrl.startsWith('http') ? data.avatarUrl : `${BASE_URL}${data.avatarUrl}`;
+            profileImg.src = (data.avatarUrl.startsWith('http') || data.avatarUrl.startsWith('data:')) ? data.avatarUrl : `${BASE_URL}${data.avatarUrl}`;
         }
     } catch (e) { console.error('Error tracking image mapping reference downstream:', e); }
 }
@@ -110,7 +113,7 @@ async function loadPublicProjects() {
             const card = document.createElement('div');
             card.className = 'glass-card project-card';
             card.style.padding = '15px';
-            const img = project.imageUrl.startsWith('http') ? project.imageUrl : `${BASE_URL}${project.imageUrl}`;
+            const img = (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('data:')) ? project.imageUrl : `${BASE_URL}${project.imageUrl}`;
             
             card.innerHTML = `
                 <img src="${img}" alt="${project.title}" style="width:100%; height:200px; object-fit:cover; border-radius:6px; margin-bottom:15px;">

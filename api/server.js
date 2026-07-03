@@ -19,13 +19,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'YOUR_SUPER_SECURE_SECRET_KEY_CHANG
 app.use(cors());
 app.use(express.json());
 
-// Adjust uploads for Vercel's read-only serverless environment fallback (/tmp)
-const uploadDir = process.env.VERCEL ? path.join('/tmp', 'uploads') : path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Serve committed uploads directory for legacy/existing files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-app.use('/uploads', express.static(uploadDir));
 
 // Serve static frontend files from the root directory when running locally
 if (!process.env.VERCEL) {
@@ -48,12 +43,14 @@ mongoose.connect(dbURI)
       console.error('❌ MongoDB Connection Error:', err);
   });
 
-// --- MULTER CONFIGURATION ---
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir), // Uses dynamic directory path
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-const upload = multer({ storage: storage });
+// --- MULTER CONFIGURATION (Memory Storage for MongoDB persistence) ---
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+// Helper: Convert uploaded file buffer to a base64 data URL
+function fileToDataUrl(file) {
+    const base64 = file.buffer.toString('base64');
+    return `data:${file.mimetype};base64,${base64}`;
+}
 
 // --- DATA ACCESS LAYER (MONGOOSE SCHEMAS) ---
 const User = mongoose.model('User', new mongoose.Schema({
@@ -160,7 +157,7 @@ app.post('/api/projects', verifyToken, upload.single('projectImage'), async (req
         title: req.body.title,
         description: req.body.description,
         link: req.body.link,
-        imageUrl: req.file ? `/uploads/${req.file.filename}` : '',
+        imageUrl: req.file ? fileToDataUrl(req.file) : '',
         status: 'active'
     });
     await newProject.save();
@@ -181,15 +178,15 @@ app.delete('/api/projects/:id', verifyToken, async (req, res) => {
 app.get('/api/profile', async (req, res) => res.json(await Profile.findOne() || { avatarUrl: '' }));
 app.post('/api/profile', verifyToken, upload.single('profileImage'), async (req, res) => {
     let profile = await Profile.findOne();
-    const targetUrl = `/uploads/${req.file.filename}`;
-    if (profile) profile.avatarUrl = targetUrl; else profile = new Profile({ avatarUrl: targetUrl });
+    const dataUrl = fileToDataUrl(req.file);
+    if (profile) profile.avatarUrl = dataUrl; else profile = new Profile({ avatarUrl: dataUrl });
     await profile.save();
-    res.json({ message: 'Avatar image reassigned successfully.', avatarUrl: targetUrl });
+    res.json({ message: 'Avatar image reassigned successfully.', avatarUrl: dataUrl });
 });
 app.get('/api/cv', async (req, res) => res.json(await Cv.findOne().sort({ uploadedAt: -1 }) || { fileUrl: '' }));
 app.post('/api/admin/cv/upload', verifyToken, upload.single('cvFile'), async (req, res) => {
     await Cv.deleteMany({});
-    const newCv = new Cv({ fileUrl: `/uploads/${req.file.filename}` });
+    const newCv = new Cv({ fileUrl: fileToDataUrl(req.file) });
     await newCv.save();
     res.json({ message: 'CV asset uploaded and attached successfully.' });
 });
