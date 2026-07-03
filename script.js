@@ -21,9 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Smooth Navigation Interceptor Logic Configuration
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
-            e.preventDefault();
             const targetId = this.getAttribute('href');
-            if (targetId && targetId !== '#') {
+            if (targetId && targetId.startsWith('#') && targetId !== '#') {
+                e.preventDefault();
                 const target = document.querySelector(targetId);
                 if (target) {
                     target.scrollIntoView({ behavior: 'smooth' });
