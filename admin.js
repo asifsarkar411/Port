@@ -344,23 +344,23 @@ async function loadProjects() {
             return;
         }
 
-        adminProjects.forEach(p => {
-            const tr = document.createElement('tr');
+        const rows = adminProjects.map(p => {
             const imgUrl = (p.imageUrl && (p.imageUrl.startsWith('http') || p.imageUrl.startsWith('data:'))) ? p.imageUrl : `${BASE_URL}${p.imageUrl || ''}`;
-            tr.innerHTML = `
-                <td><img src="${imgUrl}" width="35" height="35" style="object-fit:cover; border-radius:4px;" onerror="this.onerror=null; this.src='https://placehold.co/35';"></td>
-                <td style="color:#fff;"><strong>${p.title || 'Untitled'}</strong></td>
-                <td style="color:#c0cde0;"><span style="font-size:12px;">${p.projectType || 'Web Development'}</span></td>
-                <td><button class="btn-action-toggle ${p.status === 'active' ? 'active-btn' : ''}" onclick="toggleStatus('${p._id}')">${p.status || 'inactive'}</button></td>
-                <td>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn-action-toggle" style="background:#fca311; color:#000; padding:6px 10px;" onclick="editProject('${p._id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-action-danger" onclick="deleteProject('${p._id}')"><i class="fas fa-trash-alt"></i></button>
+            return `<tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding:12px;"><img src="${imgUrl}" width="40" height="40" style="object-fit:cover; border-radius:6px; display:block;" onerror="this.onerror=null; this.src='https://placehold.co/40';"></td>
+                <td style="padding:12px; color:#ffffff; font-size:14px;"><strong>${p.title || 'Untitled'}</strong></td>
+                <td style="padding:12px; color:#8fa0c2; font-size:12px;">${p.projectType || 'Web Development'}</td>
+                <td style="padding:12px;"><button class="btn-action-toggle ${p.status === 'active' ? 'active-btn' : ''}" onclick="toggleStatus('${p._id}')">${p.status || 'inactive'}</button></td>
+                <td style="padding:12px;">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button class="btn-action-toggle" style="background:#fca311; color:#000; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="editProject('${p._id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-action-danger" style="cursor:pointer;" onclick="deleteProject('${p._id}')"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </td>
-            `;
-            tbody.appendChild(tr);
-        });
+            </tr>`;
+        }).join('');
+        tbody.innerHTML = rows;
+        console.log('loadProjects: tbody now has', tbody.rows.length, 'rows');
     } catch (e) {
         console.error('loadProjects error:', e);
         const tbody = document.getElementById('projects-table-body');
