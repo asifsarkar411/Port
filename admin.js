@@ -324,24 +324,34 @@ window.deleteSkill = async (id) => {
 
 // FEATURED PORTFOLIO PROJECTS MATRIX CORE
 async function loadProjects() {
-    const res = await authFetch(`${API_URL}/admin/projects`);
-    adminProjects = await res.json();
-    
-    const activeCount = adminProjects && Array.isArray(adminProjects) ? adminProjects.filter(p => p.status === 'active').length : 0;
-    document.getElementById('metric-active-projects').innerText = activeCount;
+    try {
+        const res = await authFetch(`${API_URL}/admin/projects`);
+        if (!res.ok) {
+            console.error('loadProjects: server responded with', res.status);
+            return;
+        }
+        adminProjects = await res.json();
+        console.log('loadProjects: loaded', adminProjects.length, 'projects', adminProjects);
 
-    const tbody = document.getElementById('projects-table-body');
-    tbody.innerHTML = '';
-    
-    if(adminProjects && Array.isArray(adminProjects)) {
+        const activeCount = adminProjects && Array.isArray(adminProjects) ? adminProjects.filter(p => p.status === 'active').length : 0;
+        document.getElementById('metric-active-projects').innerText = activeCount;
+
+        const tbody = document.getElementById('projects-table-body');
+        tbody.innerHTML = '';
+
+        if (!adminProjects || !Array.isArray(adminProjects) || adminProjects.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; opacity:0.5;">No projects found.</td></tr>';
+            return;
+        }
+
         adminProjects.forEach(p => {
             const tr = document.createElement('tr');
             const imgUrl = (p.imageUrl && (p.imageUrl.startsWith('http') || p.imageUrl.startsWith('data:'))) ? p.imageUrl : `${BASE_URL}${p.imageUrl || ''}`;
             tr.innerHTML = `
                 <td><img src="${imgUrl}" width="35" height="35" style="object-fit:cover; border-radius:4px;" onerror="this.onerror=null; this.src='https://placehold.co/35';"></td>
-                <td><strong>${p.title}</strong></td>
-                <td><span style="opacity: 0.8; font-size:12px;">${p.projectType || 'Web Development'}</span></td>
-                <td><button class="btn-action-toggle ${p.status === 'active' ? 'active-btn' : ''}" onclick="toggleStatus('${p._id}')">${p.status}</button></td>
+                <td style="color:#fff;"><strong>${p.title || 'Untitled'}</strong></td>
+                <td style="color:#c0cde0;"><span style="font-size:12px;">${p.projectType || 'Web Development'}</span></td>
+                <td><button class="btn-action-toggle ${p.status === 'active' ? 'active-btn' : ''}" onclick="toggleStatus('${p._id}')">${p.status || 'inactive'}</button></td>
                 <td>
                     <div style="display:flex; gap:10px;">
                         <button class="btn-action-toggle" style="background:#fca311; color:#000; padding:6px 10px;" onclick="editProject('${p._id}')"><i class="fas fa-edit"></i></button>
@@ -351,11 +361,15 @@ async function loadProjects() {
             `;
             tbody.appendChild(tr);
         });
+    } catch (e) {
+        console.error('loadProjects error:', e);
+        const tbody = document.getElementById('projects-table-body');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#ff357a;">Failed to load projects. Check console.</td></tr>';
     }
 }
 
-window.toggleStatus = async (id) => { await authFetch(`${API_URL}/projects/${id}/status`, { method: 'PUT' }); loadProjects(); };
-window.deleteProject = async (id) => { if (confirm("Erase project?")) { await authFetch(`${API_URL}/projects/${id}`, { method: 'DELETE' }); loadProjects(); } };
+window.toggleStatus = async (id) => { try { await authFetch(`${API_URL}/admin/projects/${id}/status`, { method: 'PUT' }); loadProjects(); } catch(e) { console.error('toggleStatus error:', e); } };
+window.deleteProject = async (id) => { if (confirm("Erase project?")) { try { await authFetch(`${API_URL}/admin/projects/${id}`, { method: 'DELETE' }); loadProjects(); } catch(e) { console.error('deleteProject error:', e); } } };
 
 document.getElementById('project-form').addEventListener('submit', async (e) => {
     e.preventDefault();
