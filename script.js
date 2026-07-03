@@ -138,8 +138,13 @@ async function loadDynamicCv() {
         const data = await res.json();
         const cvBtn = document.getElementById('dynamicCvBtn');
         if (cvBtn && data.fileUrl) {
-            cvBtn.href = `${BASE_URL}${data.fileUrl}`;
-            cvBtn.removeAttribute('download');
+            const isBase64 = data.fileUrl.startsWith('data:');
+            cvBtn.href = (data.fileUrl.startsWith('http') || isBase64) ? data.fileUrl : `${BASE_URL}${data.fileUrl}`;
+            if (isBase64) {
+                cvBtn.setAttribute('download', 'SM_Ferdous_Ahmmed_CV.pdf');
+            } else {
+                cvBtn.removeAttribute('download');
+            }
         }
     } catch (e) { console.error(e); }
 }
