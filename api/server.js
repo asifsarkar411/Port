@@ -115,33 +115,41 @@ const verifyToken = (req, res, next) => {
 
 // 1. Authentication
 app.post('/api/auth/login', async (req, res) => {
-    const { username, password } = req.body;
-    let user = await User.findOne({ username });
-    
-    const fallbackPassword = process.env.ADMIN_PASSWORD || 'MySecurePassword123';
-    
-    if (!user && username === 'admin') {
-        const hashedFallbackPassword = await bcrypt.hash(fallbackPassword, 10);
-        user = new User({ username: 'admin', password: hashedFallbackPassword });
-        await user.save();
-    } else if (user && username === 'admin') {
-        const dbPasswordMatch = await bcrypt.compare(password, user.password);
-        if (!dbPasswordMatch && password === fallbackPassword) {
-            user.password = await bcrypt.hash(fallbackPassword, 10);
+    try {
+        const { username, password } = req.body;
+        const fallbackPassword = process.env.ADMIN_PASSWORD || 'MySecurePassword123';
+        
+        let user = await User.findOne({ username });
+        
+        // Auto-create admin user if it doesn't exist
+        if (!user && username === 'admin') {
+            const hashedPassword = await bcrypt.hash(fallbackPassword, 10);
+            user = new User({ username: 'admin', password: hashedPassword });
             await user.save();
         }
+        
+        if (!user) return res.status(404).json({ message: 'User record not found.' });
+        
+        // Check password against database
+        let isValid = await bcrypt.compare(password, user.password);
+        
+        // Self-healing: if password doesn't match DB but matches the fallback, reset and allow
+        if (!isValid && username === 'admin' && password === fallbackPassword) {
+            user.password = await bcrypt.hash(fallbackPassword, 10);
+            await user.save();
+            isValid = true;
+        }
+        
+        if (!isValid) {
+            return res.status(400).json({ message: 'Invalid credentials.' });
+        }
+        
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '12h' });
+        res.json({ token });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ message: 'Server error during authentication.' });
     }
-    
-    if (!user) return res.status(404).json({ message: 'User record not found.' });
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-        return res.status(400).json({ 
-            message: `Invalid structural credentials. Submitted length: ${password ? password.length : 0}, Expected fallback length: ${fallbackPassword.length}.`
-        });
-    }
-    
-    const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '12h' });
-    res.json({ token });
 });
 
 // 2. Projects
