@@ -400,8 +400,10 @@
                         <div class="card">
                             <h3><i class="fas fa-file-pdf"></i> CV Asset</h3>
                             <form id="cv-upload-form" style="display: flex; flex-direction: column; gap:15px;">
-                                <input type="file" id="cv-file" accept=".pdf" required style="background: rgba(0,0,0,0.2); padding: 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
-                                <button type="submit" class="btn-submit" style="width: max-content;">Deploy Static Document</button>
+                                <input type="file" id="cv-file" accept=".pdf" multiple required style="background: rgba(0,0,0,0.2); padding: 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+    <!-- Container for multiple CV entries with activate buttons -->
+    <div id="admin-cv-list" style="margin-top:15px; display:flex; flex-direction:column; gap:10px;"></div>
+                                <button type="submit" class="btn-submit" style="width: max-content;">Upload CV(s)</button>
                             </form>
                             <div id="admin-cv-container" style="margin-top:10px;"></div>
                         </div>

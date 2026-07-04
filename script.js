@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPublicExperience();
     loadPublicSkills();
     loadPublicProjects();
+    initProjectScroll();
     loadPublicEducation();
     loadDynamicCv();
     setupContactForm();
@@ -215,8 +216,21 @@ async function loadPublicProjects() {
 
             rootContainer.appendChild(heading);
             rootContainer.appendChild(grid);
-        });
+            initProjectScroll();
+});
     } catch (e) { console.error('Error loading projects dynamically:', e); }
+}
+function initProjectScroll() {
+    const cards = document.querySelectorAll('.project-card');
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                obs.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    cards.forEach(card => observer.observe(card));
 }
 
 async function loadDynamicCv() {

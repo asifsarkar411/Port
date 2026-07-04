@@ -703,9 +703,37 @@ img {
 
 .btn-primary:hover {
     background: var(--accent-color);
-    color: #000000;
+    color: #000;
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(0, 210, 255, 0.4);
+}
+
+/* Added button toggle style */
+.btn-action-toggle {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    transition: var(--transition-smooth);
+}
+.btn-action-toggle.active-btn {
+    background: var(--accent-aqua);
+    color: #000;
+    font-weight: 500;
+}
+
+/* Project card scroll animation */
+.project-card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: var(--transition-smooth);
+}
+.project-card.animate-in {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .btn-animated {
@@ -798,28 +826,7 @@ img {
 }
 
 .badge-inactive {
-    background: rgba(255, 53, 122, 0.15);
-    color: var(--accent-danger);
-    border: 1px solid rgba(255, 53, 122, 0.3);
-}
-
-/* Administrative Control Panel Buttons */
-.btn-success {
-    background: var(--accent-success);
-    color: #000000;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition-smooth);
-    margin-right: 8px;
-}
-
-.btn-success:hover {
-    background: #00cc99;
-    box-shadow: 0 4px 12px rgba(0, 255, 204, 0.3);
+    background:box-shadow: 0 4px 12px rgba(0, 255, 204, 0.3);
 }
 
 .btn-danger {

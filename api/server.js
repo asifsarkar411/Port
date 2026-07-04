@@ -95,7 +95,8 @@ const Message = mongoose.model('Message', new mongoose.Schema({
 
 const Cv = mongoose.model('Cv', new mongoose.Schema({
     fileUrl: { type: String, required: true },
-    uploadedAt: { type: Date, default: Date.now }
+    uploadedAt: { type: Date, default: Date.now },
+    active: { type: Boolean, default: false }
 }));
 
 const Skill = mongoose.model('Skill', new mongoose.Schema({
@@ -246,12 +247,35 @@ app.post('/api/profile', verifyToken, upload.single('profileImage'), async (req,
     await profile.save();
     res.json({ message: 'Avatar image reassigned successfully.', avatarUrl: dataUrl });
 });
-app.get('/api/cv', async (req, res) => res.json(await Cv.findOne().sort({ uploadedAt: -1 }) || { fileUrl: '' }));
+app.get('/api/cv', async (req, res) => {
+    const activeCv = await Cv.findOne({ active: true }) || await Cv.findOne().sort({ uploadedAt: -1 });
+    res.json(activeCv || { fileUrl: '' });
+});
+
+app.get('/api/admin/cv/list', verifyToken, async (req, res) => {
+    const cvs = await Cv.find().sort({ uploadedAt: -1 });
+    res.json(cvs);
+});
+
+app.post('/api/admin/cv/upload-multiple', verifyToken, upload.array('cvFiles'), async (req, res) => {
+    if (!req.files || req.files.length === 0) return res.status(400).json({ message: 'No files uploaded.' });
+    const cvDocs = req.files.map(file => new Cv({ fileUrl: fileToDataUrl(file) }));
+    await Cv.insertMany(cvDocs);
+    res.json({ message: 'Multiple CVs uploaded.', count: cvDocs.length });
+});
+
+app.post('/api/admin/cv/activate/:id', verifyToken, async (req, res) => {
+    await Cv.updateMany({}, { $set: { active: false } });
+    await Cv.findByIdAndUpdate(req.params.id, { $set: { active: true } });
+    res.json({ message: 'CV activated.' });
+});
+
 app.post('/api/admin/cv/upload', verifyToken, upload.single('cvFile'), async (req, res) => {
+    // Delete existing CVs and replace with this one as active
     await Cv.deleteMany({});
-    const newCv = new Cv({ fileUrl: fileToDataUrl(req.file) });
+    const newCv = new Cv({ fileUrl: fileToDataUrl(req.file), active: true });
     await newCv.save();
-    res.json({ message: 'CV asset uploaded and attached successfully.' });
+    res.json({ message: 'CV asset uploaded and set as active.' });
 });
 
 // 4. Skills Engine

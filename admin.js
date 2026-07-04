@@ -156,6 +156,71 @@ async function loadProfileState() {
     }
 }
 
+document.getElementById('cv-upload-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('cv-file');
+    const files = fileInput.files;
+    if (!files || files.length === 0) return;
+    const fd = new FormData();
+    // Use appropriate endpoint based on number of files
+    if (files.length === 1) {
+        fd.append('cvFile', files[0]);
+        var endpoint = `${API_URL}/admin/cv/upload`;
+    } else {
+        for (let i = 0; i < files.length; i++) {
+            fd.append('cvFiles', files[i]);
+        }
+        var endpoint = `${API_URL}/admin/cv/upload-multiple`;
+    }
+    const res = await authFetch(endpoint, { method: 'POST', body: fd });
+    if (res.ok) {
+        alert('CV file(s) uploaded successfully.');
+        loadAdminCV();
+    } else {
+        alert('CV upload failed.');
+    }
+});
+
+// LOAD ADMIN CV LIST & ACTIVE CV DISPLAY
+async function loadAdminCV() {
+    try {
+        // Load list of all CVs for admin management
+        const listRes = await authFetch(`${API_URL}/admin/cv/list`);
+        const cvs = await listRes.json();
+        const listContainer = document.getElementById('admin-cv-list');
+        if (listContainer) {
+            listContainer.innerHTML = '';
+            cvs.forEach(cv => {
+                const link = document.createElement('a');
+                link.href = (cv.fileUrl.startsWith('http') || cv.fileUrl.startsWith('data:')) ? cv.fileUrl : `${BASE_URL}${cv.fileUrl}`;
+                link.target = '_blank';
+                link.download = 'CV.pdf';
+                link.innerText = 'View';
+                const activateBtn = document.createElement('button');
+                activateBtn.className = 'btn-action-toggle';
+                activateBtn.innerText = cv.active ? 'Active' : 'Activate';
+                if (cv.active) activateBtn.classList.add('active-btn');
+                activateBtn.onclick = () => {
+                    authFetch(`${API_URL}/admin/cv/activate/${cv._id}`, { method: 'POST' })
+                        .then(() => loadAdminCV())
+                        .catch(err => console.error('Activate CV error:', err));
+                };
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.alignItems = 'center';
+                wrapper.style.gap = '10px';
+                wrapper.appendChild(link);
+                wrapper.appendChild(activateBtn);
+                listContainer.appendChild(wrapper);
+            });
+        }
+        // Also update the public CV download button (dynamicCvBtn) via existing loadDynamicCv logic
+        // No further action needed here.
+    } catch (e) {
+        console.error('Error loading CV assets:', e);
+    }
+}
+
 document.getElementById('hidden-avatar-input').addEventListener('change', async (e) => {
     if(!e.target.files[0]) return;
     const fd = new FormData();
@@ -591,32 +656,6 @@ window.deleteEducation = async (id) => {
 };
 
 // CV ASSET DISPATCH MOUNT
-document.getElementById('cv-upload-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData();
-    fd.append('cvFile', document.getElementById('cv-file').files[0]);
-    const res = await authFetch(`${API_URL}/admin/cv/upload`, { method: 'POST', body: fd });
-    if (res.ok) {
-        alert('Static PDF attachment reference compiled successfully.');
-        loadAdminCV();
-    }
-});
-
-// LOAD ADMIN CV DISPLAY
-async function loadAdminCV() {
-    try {
-        const res = await authFetch(`${API_URL}/cv`);
-        const data = await res.json();
-        const container = document.getElementById('admin-cv-container');
-        if (!container) return;
-        if (!data.fileUrl) {
-            container.innerHTML = '<p style="opacity:0.5; font-size:13px;">No CV uploaded.</p>';
-            return;
-        }
-        const link = data.fileUrl.startsWith('http') || data.fileUrl.startsWith('data:') ? data.fileUrl : `${BASE_URL}${data.fileUrl}`;
-        container.innerHTML = `<a href="${link}" target="_blank" download="CV.pdf" class="btn btn-animated" style="display:inline-block; margin-top:10px;">View / Download CV</a>`;
-    } catch (e) { console.error('Error loading CV asset:', e); }
-}
 
 async function loadAdminMessages() {
     try {
