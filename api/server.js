@@ -223,7 +223,24 @@ app.delete('/api/projects/:id', verifyToken, async (req, res) => {
 });
 
 // Project Types Routes
-app.get('/api/project-types', async (req, res) => res.json(await ProjectType.find()));
+app.get('/api/project-types', async (req, res) => {
+    try {
+        const types = await ProjectType.find();
+        res.json(types);
+    } catch (err) {
+        console.error('Error fetching project types:', err);
+        res.status(200).json([]);
+    }
+});
+app.get('/api/skills', async (req, res) => {
+    try {
+        const skills = await Skill.find();
+        res.json(skills);
+    } catch (err) {
+        console.error('Error fetching skills:', err);
+        res.status(200).json([]);
+    }
+});
 app.post('/api/admin/project-types', verifyToken, async (req, res) => {
     try {
         const newType = new ProjectType({ name: req.body.name });
