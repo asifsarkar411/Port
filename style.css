@@ -1301,3 +1301,23 @@ html[data-theme="light"] .timeline-dot {
         transform: translateX(-30px); /* both slide from left on mobile */
     }
 }
+
+/* Mobile responsiveness for contact section */
+@media (max-width: 600px) {
+    .contact-wrapper {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .contact-content-left,
+    .contact-content-right {
+        padding: 15px;
+    }
+    .styled-form input,
+    .styled-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .styled-form button {
+        width: 100%;
+    }
+}
