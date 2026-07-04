@@ -11,6 +11,10 @@
 (function () {
     'use strict';
 
+    // Immediate Theme Initialization
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /* ----------------------------------------------------------------------
@@ -205,15 +209,68 @@
     }
 
     /* ----------------------------------------------------------------------
+       7. THEME TOGGLE
+       ---------------------------------------------------------------------- */
+    function initThemeToggle() {
+        const toggleBtn = document.getElementById('theme-toggle');
+        if (!toggleBtn) return;
+
+        updateToggleIcon(toggleBtn, currentTheme);
+
+        toggleBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            updateToggleIcon(toggleBtn, target);
+        });
+    }
+
+    function updateToggleIcon(btn, theme) {
+        const icon = btn.querySelector('i');
+        if (!icon) return;
+        if (theme === 'light') {
+            icon.className = 'fas fa-sun';
+            icon.style.color = '#fca311';
+        } else {
+            icon.className = 'fas fa-moon';
+            icon.style.color = '';
+        }
+    }
+
+    /* ----------------------------------------------------------------------
+       8. TIMELINE REVEAL
+       ---------------------------------------------------------------------- */
+    function initTimelineReveal() {
+        if (prefersReducedMotion) return;
+        const items = document.querySelectorAll('.timeline-item');
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -45px 0px' });
+        
+        items.forEach(el => io.observe(el));
+    }
+
+    // Expose it globally so script.js can invoke it after rendering
+    window.initTimelineReveal = initTimelineReveal;
+
+    /* ----------------------------------------------------------------------
        Boot
        ---------------------------------------------------------------------- */
     function init() {
+        initThemeToggle();
         initScrollReveal();
         initRipple();
         initNav();
         initProgressBar();
         initCounters();
         initBackToTop();
+        initTimelineReveal(); // Run once for static elements if any
     }
 
     if (document.readyState === 'loading') {

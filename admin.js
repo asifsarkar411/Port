@@ -34,6 +34,7 @@ function showDashboard() {
     loginContainer.classList.add('hidden');
     dashboardContainer.classList.remove('hidden');
     setupNavigationRouting();
+    initMobileSidebar();
     
     // Core Engine Refresher System Initialization
     loadProjects();
@@ -68,6 +69,12 @@ function setupNavigationRouting() {
             const target = item.getAttribute('data-target');
             document.getElementById(target).classList.add('active-view');
             titleHeader.innerText = item.innerText;
+
+            // Close mobile sidebar drawer automatically on navigation selection
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar) sidebar.classList.remove('sidebar-open');
+            if (overlay) overlay.classList.remove('active');
         });
     });
 
@@ -83,6 +90,26 @@ function setupNavigationRouting() {
         document.getElementById('section-dashboard').classList.add('active-view');
         titleHeader.innerText = "Dashboard Overview";
     });
+}
+
+function initMobileSidebar() {
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    if (!toggleBtn || !sidebar || !overlay) return;
+
+    const closeSidebar = () => {
+        sidebar.classList.remove('sidebar-open');
+        overlay.classList.remove('active');
+    };
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('sidebar-open');
+        overlay.classList.toggle('active');
+    });
+
+    overlay.addEventListener('click', closeSidebar);
 }
 
 // SECURE Gateway User Auth Entry Execution
@@ -487,7 +514,9 @@ async function loadAdminEducation() {
         <div class="node-row">
             <div>
                 <strong style="color:var(--accent-aqua); font-size:14px;">${edu.degree}</strong> at <b>${edu.schoolName}</b>
-                <div style="font-size:12px; opacity:0.6; margin-top:2px;">${edu.period} | ${edu.description}</div>
+                <div style="font-size:12px; opacity:0.6; margin-top:2px;">
+                    ${edu.period} | ${edu.department ? `<b>Dept:</b> ${edu.department} | ` : ''}${edu.description}
+                </div>
             </div>
             <div style="display:flex; gap:10px;">
                 <button class="btn-action-toggle" style="background:#fca311; color:#000; padding:6px 10px;" onclick="editEducation('${edu._id}')"><i class="fas fa-edit"></i></button>
@@ -504,6 +533,7 @@ document.getElementById('add-edu-form').addEventListener('submit', async (e) => 
         schoolName: document.getElementById('edu-school').value.trim(),
         degree: document.getElementById('edu-degree').value.trim(),
         period: document.getElementById('edu-period').value.trim(),
+        department: document.getElementById('edu-department').value.trim(),
         description: document.getElementById('edu-description').value.trim(),
         order: parseInt(document.getElementById('edu-order').value) || 0
     };
@@ -536,6 +566,7 @@ window.editEducation = (id) => {
     document.getElementById('edu-school').value = edu.schoolName;
     document.getElementById('edu-degree').value = edu.degree;
     document.getElementById('edu-period').value = edu.period;
+    document.getElementById('edu-department').value = edu.department || '';
     document.getElementById('edu-description').value = edu.description;
     document.getElementById('edu-order').value = edu.order || 0;
     

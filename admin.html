@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="animation.css">
-    <link rel="stylesheet" href="animation.css">
     <style>
         :root {
             --bg-main: #14213d;
@@ -110,6 +109,83 @@
 
         .message-card { background: rgba(255,255,255,0.02); border-left: 3px solid var(--accent-pink); padding: 15px; border-radius: 4px; margin-bottom: 12px; }
         .message-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+
+        /* MOBILE RESPONSIVE DECLARATIONS */
+        .sidebar-toggle-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 15px;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 998;
+            display: none;
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 260px;
+                z-index: 999;
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            }
+            .sidebar.sidebar-open {
+                transform: translateX(0);
+            }
+            .sidebar-toggle-btn {
+                display: block;
+            }
+            .top-header {
+                padding: 0 20px;
+            }
+            .workspace-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .top-header h2 {
+                font-size: 16px;
+            }
+            .metrics-row {
+                grid-template-columns: 1fr;
+            }
+            .card {
+                padding: 20px;
+            }
+            .node-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .node-row > div:last-child {
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 <body>
@@ -126,6 +202,7 @@
     </div>
 
     <div id="dashboard-container" class="dashboard-wrapper hidden">
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
         
         <aside class="sidebar">
             <div class="profile-section">
@@ -158,7 +235,10 @@
 
         <main class="main-workspace">
             <header class="top-header">
-                <h2 id="workspace-title">Core Overview Dashboard</h2>
+                <div style="display: flex; align-items: center;">
+                    <button id="sidebar-toggle" class="sidebar-toggle-btn" aria-label="Toggle Navigation Menu"><i class="fas fa-bars"></i></button>
+                    <h2 id="workspace-title">Core Overview Dashboard</h2>
+                </div>
                 <div class="header-controls">
                     <div class="notification-bell" id="top-notification-bell">
                         <i class="fas fa-envelope"></i>

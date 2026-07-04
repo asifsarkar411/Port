@@ -118,6 +118,7 @@ const Education = mongoose.model('Education', new mongoose.Schema({
     schoolName: { type: String, required: true },
     degree: { type: String, required: true },
     period: { type: String, required: true },
+    department: { type: String },
     description: { type: String, required: true },
     order: { type: Number, default: 0 }
 }));

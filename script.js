@@ -49,38 +49,80 @@ async function loadPublicProfile() {
 async function loadPublicExperience() {
     try {
         const res = await fetch(`${API_URL}/experience`);
-        const data = await res.json();
-        const container = document.getElementById('experience-container');
+        const apiData = await res.json();
+        const container = document.getElementById('experience-timeline');
         if (!container) return;
 
-        if (data.length === 0) {
+        // Static Journey milestones requested by the user
+        const journeyMilestones = [
+            {
+                jobTitle: "Began Coding Journey",
+                companyName: "Self-Learning & Exploration",
+                location: "Home Base",
+                period: "Jan 2023",
+                responsibilities: "Explored basic programming concepts.\nLearned HTML5, CSS3, and modern CSS layouts.\nBuilt first static webpages and terminal tools.",
+                order: -100
+            },
+            {
+                jobTitle: "Learned Modern Frameworks",
+                companyName: "Vite, React, Express & MongoDB",
+                location: "Bootcamps & Online Labs",
+                period: "Mid 2023",
+                responsibilities: "Mastered JavaScript ES6+ specifications.\nLearned React.js component-driven development.\nBuilt REST APIs with Node.js/Express and integrated MongoDB database layers.",
+                order: -90
+            },
+            {
+                jobTitle: "IoT Systems Automation Milestone",
+                companyName: "Hardware Integration & Control Core",
+                location: "IoT Lab Project",
+                period: "Early 2024",
+                responsibilities: "Designed and prototyped automated IoT pipelines with microcontrollers.\nCreated real-time monitoring web dashboards.\nProgrammed ESP32 modules for sensor data capture and cloud sync.",
+                order: -80
+            }
+        ];
+
+        // Merge and sort all items by order
+        const allItems = [...journeyMilestones, ...apiData].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        if (allItems.length === 0) {
             container.innerHTML = '<p style="text-align:center; opacity:0.6;">Timeline is currently empty.</p>';
             return;
         }
 
-        container.innerHTML = data.map(exp => {
+        container.innerHTML = allItems.map((exp, index) => {
             const responsibilityBullets = exp.responsibilities.split('\n')
                 .filter(bullet => bullet.trim() !== '')
                 .map(bullet => `<li>${bullet.trim()}</li>`).join('');
 
+            // Odd items left, Even items right
+            const alignClass = index % 2 === 0 ? 'reveal-timeline-left' : 'reveal-timeline-right';
+
             return `
-                <div class="glass-card experience-card" style="padding: 25px; border-left: 4px solid aqua; position: relative;">
-                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-                        <div>
-                            <h3 style="color: #fff; margin-bottom: 2px;">${exp.jobTitle}</h3>
-                            <h4 style="color: aqua; font-weight: 400;">${exp.companyName}</h4>
+                <div class="timeline-item ${alignClass}">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <h3 style="margin-bottom: 2px;">${exp.jobTitle}</h3>
+                                <h4 style="font-weight: 500;">${exp.companyName}</h4>
+                            </div>
+                            <div style="text-align: right; font-size: 13px; opacity: 0.8;">
+                                <span style="display: block; font-weight: 600;"><i class="fas fa-calendar-alt"></i> ${exp.period}</span>
+                                <span style="display: block;"><i class="fas fa-map-marker-alt"></i> ${exp.location}</span>
+                            </div>
                         </div>
-                        <div style="text-align: right; font-size: 14px; opacity: 0.8;">
-                            <span style="display: block; font-weight: 600;"><i class="fas fa-calendar-alt"></i> ${exp.period}</span>
-                            <span style="display: block;"><i class="fas fa-map-marker-alt"></i> ${exp.location}</span>
-                        </div>
+                        <ul>
+                            ${responsibilityBullets}
+                        </ul>
                     </div>
-                    <ul style="margin-left: 20px; margin-top: 15px; display: flex; flex-direction: column; gap: 8px; line-height: 1.6; opacity: 0.95; font-size: 14px;">
-                        ${responsibilityBullets}
-                    </ul>
                 </div>
             `;
         }).join('');
+
+        // Trigger animations trigger for timeline items after injection
+        if (window.initTimelineReveal) {
+            window.initTimelineReveal();
+        }
     } catch (err) { console.error('Error compiling timeline segments:', err); }
 }
 
@@ -237,7 +279,7 @@ async function loadPublicEducation() {
                 <span class="edu-year" style="display:block; font-weight:600; color:aqua; margin-bottom:10px;"><i class="fas fa-calendar-alt"></i> ${edu.period}</span>
                 <div class="edu-header">
                     <h4 style="color:#fff; margin-bottom:5px;">${edu.degree}</h4>
-                    <h5 style="color:aqua; font-weight:400;">${edu.schoolName}</h5>
+                    <h5 style="color:aqua; font-weight:400;">${edu.schoolName}${edu.department ? ` &bull; ${edu.department}` : ''}</h5>
                 </div>
                 <p class="edu-desc" style="opacity:0.8; margin-top:10px; font-size:14px; line-height:1.5;">${edu.description}</p>
             </div>

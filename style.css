@@ -25,6 +25,18 @@
     --section-pad-y: 100px;
 }
 
+html[data-theme="light"] {
+    --primary-color: #1e2229;
+    --accent-color: #0088cc;
+    --accent-danger: #e63946;
+    --accent-success: #2a9d8f;
+    --text-muted: rgba(30, 34, 41, 0.7);
+
+    --glass-bg: rgba(0, 0, 0, 0.03);
+    --glass-bg-hover: rgba(0, 0, 0, 0.06);
+    --glass-border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* Global Standard Resets */
 * {
     margin: 0;
@@ -1073,5 +1085,208 @@ footer {
     .hero-image-container img {
         width: min(220px, 55vw);
         height: min(220px, 55vw);
+    }
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    background: var(--glass-bg);
+    border: var(--glass-border);
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+}
+.theme-toggle-btn:hover {
+    color: var(--accent-color);
+    background: var(--glass-bg-hover);
+    transform: scale(1.1) rotate(15deg);
+}
+
+/* Light Theme Helper Classes & Specific Overrides */
+html[data-theme="light"] .bg-overlay {
+    background: rgba(255, 255, 255, 0.85);
+}
+html[data-theme="light"] .glass-nav {
+    background: rgba(255, 255, 255, 0.4);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .styled-form input[type="text"],
+html[data-theme="light"] .styled-form input[type="email"],
+html[data-theme="light"] .styled-form input[type="password"],
+html[data-theme="light"] .styled-form input[type="url"],
+html[data-theme="light"] .styled-form textarea {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+html[data-theme="light"] .social-links-contact a,
+html[data-theme="light"] .social-hero a {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+html[data-theme="light"] .social-links-contact a:hover,
+html[data-theme="light"] .social-hero a:hover {
+    color: #ffffff;
+    background: var(--accent-color);
+}
+html[data-theme="light"] .btn-primary {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+/* Timeline Layout Component */
+.timeline-container {
+    position: relative;
+    max-width: 900px;
+    margin: 60px auto 20px auto;
+    padding: 10px 0;
+}
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(-50%);
+}
+html[data-theme="light"] .timeline-container::before {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.timeline-item {
+    position: relative;
+    width: 50%;
+    padding: 0 40px 40px 40px;
+    box-sizing: border-box;
+}
+.timeline-item:nth-child(odd) {
+    left: 0;
+    text-align: right;
+}
+.timeline-item:nth-child(even) {
+    left: 50%;
+    text-align: left;
+}
+
+.timeline-dot {
+    position: absolute;
+    top: 22px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    box-shadow: 0 0 10px var(--accent-color);
+    border: 3px solid #1a1a24;
+    z-index: 10;
+    transition: var(--transition-smooth);
+}
+html[data-theme="light"] .timeline-dot {
+    border: 3px solid #ffffff;
+}
+.timeline-item:nth-child(odd) .timeline-dot {
+    right: -9px;
+}
+.timeline-item:nth-child(even) .timeline-dot {
+    left: -9px;
+}
+
+.timeline-content {
+    background: var(--glass-bg);
+    border: var(--glass-border);
+    backdrop-filter: blur(var(--blur-strength));
+    -webkit-backdrop-filter: blur(var(--blur-strength));
+    border-radius: var(--border-radius);
+    padding: 25px;
+    transition: var(--transition-smooth);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+    display: inline-block;
+    width: 100%;
+    text-align: left;
+}
+.timeline-item:hover .timeline-dot {
+    transform: scale(1.3);
+    background: var(--accent-danger);
+    box-shadow: 0 0 15px var(--accent-danger);
+}
+.timeline-item:hover .timeline-content {
+    transform: translateY(-5px);
+    border-color: var(--accent-color);
+    box-shadow: 0 12px 40px rgba(0, 210, 255, 0.15);
+}
+
+.timeline-content h3 {
+    font-size: 1.25rem;
+    margin-bottom: 5px;
+    color: var(--primary-color);
+}
+.timeline-content h4 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--accent-color);
+    margin-bottom: 12px;
+}
+.timeline-content ul {
+    margin-left: 20px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Timeline animations for Intersection Observer */
+.timeline-item.reveal-timeline-left {
+    opacity: 0;
+    transform: translateX(-40px);
+    transition: opacity 0.7s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.timeline-item.reveal-timeline-right {
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.7s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.timeline-item.reveal-timeline-left.in-view,
+.timeline-item.reveal-timeline-right.in-view {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Responsive Timeline overrides */
+@media (max-width: 768px) {
+    .timeline-container::before {
+        left: 20px;
+    }
+    .timeline-item {
+        width: 100%;
+        padding-left: 50px;
+        padding-right: 15px;
+        text-align: left !important;
+        margin-bottom: 30px;
+    }
+    .timeline-item:nth-child(odd) {
+        left: 0;
+    }
+    .timeline-item:nth-child(even) {
+        left: 0;
+    }
+    .timeline-item .timeline-dot {
+        left: 11px !important;
+        right: auto !important;
+    }
+    .timeline-item.reveal-timeline-left {
+        transform: translateX(-30px);
+    }
+    .timeline-item.reveal-timeline-right {
+        transform: translateX(-30px); /* both slide from left on mobile */
     }
 }
