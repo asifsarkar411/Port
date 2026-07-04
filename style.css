@@ -1132,7 +1132,7 @@ html[data-theme="light"] .styled-form textarea {
 }
 html[data-theme="light"] .social-links-contact a,
 html[data-theme="light"] .social-hero a {
-    background: rgba(0, 0, 0, 0.03);
+    background:#1a1a24;
     border: 1px solid rgba(0, 0, 0, 0.1);
 }
 html[data-theme="light"] .social-links-contact a:hover,
@@ -1142,7 +1142,7 @@ html[data-theme="light"] .social-hero a:hover {
 }
 html[data-theme="light"] .btn-primary {
     background: var(--primary-color);
-    color: #ffffff;
+    color: #fdfdfd;
 }
 
 /* Timeline Layout Component */
